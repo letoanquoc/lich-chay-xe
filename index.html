@@ -7,11 +7,34 @@
 
 <style>
 body { font-family: -apple-system; margin:0; background:#f2f2f7;}
-.header { background:#007AFF; color:white; padding:15px; text-align:center; font-size:18px;}
-.controls { display:flex; justify-content:center; gap:10px; padding:10px; background:white;}
-           <button onclick="exportData()">💾 Backup</button>
-<input type="file" onchange="importData(event)">
+
+.header {
+    background:#007AFF;
+    color:white;
+    padding:15px;
+    text-align:center;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.controls {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    padding:10px;
+    background:white;
+}
+
 input { padding:5px; width:70px;}
+
+button {
+    padding:6px 10px;
+    border:none;
+    border-radius:6px;
+    background:#007AFF;
+    color:white;
+}
 
 .calendar {
     display:grid;
@@ -66,6 +89,8 @@ input { padding:5px; width:70px;}
     Tháng <input type="number" id="month">
     Năm <input type="number" id="year">
     <button onclick="render()">Xem</button>
+    <button onclick="exportData()">💾 Backup</button>
+    <input type="file" onchange="importData(event)">
 </div>
 
 <div class="calendar" id="calendar"></div>
@@ -78,6 +103,7 @@ input { padding:5px; width:70px;}
 
 <script>
 
+// ===== DATA =====
 function key(m,y){ return `cal-${y}-${m}`; }
 
 function getData(m,y){
@@ -88,6 +114,7 @@ function save(m,y,data){
     localStorage.setItem(key(m,y), JSON.stringify(data));
 }
 
+// ===== SET STATUS =====
 function setStatus(day, status){
     let m = document.getElementById("month").value;
     let y = document.getElementById("year").value;
@@ -99,6 +126,7 @@ function setStatus(day, status){
     render();
 }
 
+// ===== RENDER =====
 function render(){
     let m = document.getElementById("month").value;
     let y = document.getElementById("year").value;
@@ -117,14 +145,14 @@ function render(){
         let s = data[d] || "";
 
         if(s=="grab"){ grabCount++; totalMoney+=200000; }
-        if(s=="rent"){ rentCount++; totalMoney+=500000; }
+if(s=="rent"){ rentCount++; totalMoney+=500000; }
 
         let html = `
         <div class="day">
             <div class="day-number">${d}</div>
             <div class="btn grab ${s=='grab'?'active':''}" onclick="setStatus(${d},'grab')">Grab</div>
             <div class="btn off ${s=='off'?'active':''}" onclick="setStatus(${d},'off')">Nghỉ</div>
-<div class="btn rent ${s=='rent'?'active':''}" onclick="setStatus(${d},'rent')">Thuê</div>
+            <div class="btn rent ${s=='rent'?'active':''}" onclick="setStatus(${d},'rent')">Thuê</div>
         </div>
         `;
         cal.innerHTML += html;
@@ -135,22 +163,14 @@ function render(){
     document.getElementById("totalMoney").innerText = totalMoney.toLocaleString();
 }
 
-// mặc định
-let now = new Date();
-document.getElementById("month").value = now.getMonth()+1;
-document.getElementById("year").value = now.getFullYear();
-
-render();
 // ===== BACKUP =====
-
-// Xuất dữ liệu
 function exportData(){
     let allData = {};
 
     for(let i=0;i<localStorage.length;i++){
-        let key = localStorage.key(i);
-        if(key.startsWith("cal-")){
-            allData[key] = JSON.parse(localStorage.getItem(key));
+        let k = localStorage.key(i);
+        if(k.startsWith("cal-")){
+            allData[k] = JSON.parse(localStorage.getItem(k));
         }
     }
 
@@ -161,7 +181,7 @@ function exportData(){
     a.click();
 }
 
-// Nhập dữ liệu
+// ===== IMPORT =====
 function importData(event){
     let file = event.target.files[0];
     let reader = new FileReader();
@@ -169,16 +189,24 @@ function importData(event){
     reader.onload = function(e){
         let data = JSON.parse(e.target.result);
 
-        for(let key in data){
-            localStorage.setItem(key, JSON.stringify(data[key]));
+        for(let k in data){
+            localStorage.setItem(k, JSON.stringify(data[k]));
         }
 
-        alert("Khôi phục dữ liệu thành công!");
+        alert("Khôi phục thành công!");
         render();
     };
 
     reader.readAsText(file);
 }
+
+// ===== DEFAULT =====
+let now = new Date();
+document.getElementById("month").value = now.getMonth()+1;
+document.getElementById("year").value = now.getFullYear();
+
+render();
+
 </script>
 
 </body>
