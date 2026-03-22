@@ -8,7 +8,9 @@
 <style>
 body { font-family: -apple-system; margin:0; background:#f2f2f7;}
 .header { background:#007AFF; color:white; padding:15px; text-align:center; font-size:18px;}
-.controls { display:flex; justify-content:center; gap:10px; padding:10px; background:white;}
+.controls { display:flex; justify-content:center; gap:10px; padding:10px; background:white;
+           <button onclick="exportData()">💾 Backup</button>
+<input type="file" onchange="importData(event)">}
 input { padding:5px; width:70px;}
 
 .calendar {
@@ -139,7 +141,44 @@ document.getElementById("month").value = now.getMonth()+1;
 document.getElementById("year").value = now.getFullYear();
 
 render();
+// ===== BACKUP =====
 
+// Xuất dữ liệu
+function exportData(){
+    let allData = {};
+
+    for(let i=0;i<localStorage.length;i++){
+        let key = localStorage.key(i);
+        if(key.startsWith("cal-")){
+            allData[key] = JSON.parse(localStorage.getItem(key));
+        }
+    }
+
+    let blob = new Blob([JSON.stringify(allData)], {type:"application/json"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "lich_chay_xe_backup.json";
+    a.click();
+}
+
+// Nhập dữ liệu
+function importData(event){
+    let file = event.target.files[0];
+    let reader = new FileReader();
+
+    reader.onload = function(e){
+        let data = JSON.parse(e.target.result);
+
+        for(let key in data){
+            localStorage.setItem(key, JSON.stringify(data[key]));
+        }
+
+        alert("Khôi phục dữ liệu thành công!");
+        render();
+    };
+
+    reader.readAsText(file);
+}
 </script>
 
 </body>
