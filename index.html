@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Lịch chạy xe</title>
+
+<style>
+body { font-family: Arial; padding:10px; background:#f5f5f5;}
+h2 { text-align:center;}
+.controls { text-align:center; margin-bottom:10px;}
+table { width:100%; border-collapse:collapse; background:white;}
+th,td { border:1px solid #ccc; padding:6px; text-align:center; font-size:12px;}
+th { background:#007AFF; color:white;}
+select { width:100%;}
+.summary { margin-top:10px; text-align:center; font-weight:bold;}
+button { margin:3px; }
+</style>
+</head>
+
+<body>
+
+<h2>Lịch chạy xe</h2>
+
+<div class="controls">
+    Tháng: <input type="number" id="month" min="1" max="12">
+    Năm: <input type="number" id="year">
+    <button onclick="generateCalendar()">Tạo lịch</button><br>
+
+    <button onclick="exportData()">Xuất dữ liệu</button>
+    <input type="file" onchange="importData(event)">
+</div>
+
+<table id="calendar"></table>
+
+<div class="summary">
+    🚗 Chạy Grab: <span id="grabCount">0</span> ngày |
+    📅 Thuê Ngày: <span id="rentCount">0</span> ngày
+</div>
+
+<script>
+
+const statusList = ["", "Chạy Grab", "Không Chạy", "Thuê Ngày"];
+
+function getKey(year, month){
+    return `calendar-${year}-${month}`;
+}
+
+function loadMonthData(year, month){
+    let data = localStorage.getItem(getKey(year, month));
+    return data ? JSON.parse(data) : {};
+}
+
+function saveMonthData(year, month, data){
+    localStorage.setItem(getKey(year, month), JSON.stringify(data));
+}
+
+function generateCalendar() {
+    const month = document.getElementById("month").value;
+    const year = document.getElementById("year").value;
+
+    const table = document.getElementById("calendar");
+    table.innerHTML = "";
+
+    const days = new Date(year, month, 0).getDate();
+    let data = loadMonthData(year, month);
+
+    let header = "<tr>";
+    const thu = ["CN","T2","T3","T4","T5","T6","T7"];
+    for(let d of thu) header += `<th>${d}</th>`;
+    header += "</tr>";
+    table.innerHTML += header;
+
+    let row = "<tr>";
+    let firstDay = new Date(year, month - 1, 1).getDay();
+
+    for(let i=0;i<firstDay;i++) row += "<td></td>";
+
+    for(let day=1; day<=days; day++){
+        let date = new Date(year, month - 1, day).getDay();
+        let value = data[day] || "";
+
+        row += `
+        <td>
+            <div>${day}</div>
+            <select onchange="updateData(${year},${month},${day}, this.value)">
+                ${statusList.map(s => `<option ${s==value?"selected":""}>${s}</option>`).join("")}
+            </select>
+        </td>
+        `;
+
+        if(date == 6) row += "</tr><tr>";
+    }
+
+    row += "</tr>";
+    table.innerHTML += row;
+
+    updateSummary(data);
+}
+
+function updateData(year, month, day, value){
+    let data = loadMonthData(year, month);
+    data[day] = value;
+    saveMonthData(year, month, data);
+    updateSummary(data);
+}
+
+function updateSummary(data){
+    let grab = 0;
+    let rent = 0;
+
+    for(let d in data)
+{
+if(data[d] === "Chạy Grab") grab++;
+        if(data[d] === "Thuê Ngày") rent++;
+    }
+
+    document.getElementById("grabCount").innerText = grab;
+    document.getElementById("rentCount").innerText = rent;
+}
+
+// Xuất file
+function exportData(){
+    let allData = {};
+    for(let i=0;i<localStorage.length;i++){
+        let key = localStorage.key(i);
+        if(key.startsWith("calendar-")){
+            allData[key] = JSON.parse(localStorage.getItem(key));
+        }
+    }
+
+    let blob = new Blob([JSON.stringify(allData)], {type:"application/json"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "lich_chay_xe.json";
+    a.click();
+}
+
+// Nhập file
+function importData(event){
+    let file = event.target.files[0];
+    let reader = new FileReader();
+
+    reader.onload = function(e){
+        let data = JSON.parse(e.target.result);
+        for(let key in data){
+            localStorage.setItem(key, JSON.stringify(data[key]));
+        }
+        alert("Đã nhập dữ liệu!");
+        generateCalendar();
+    };
+
+    reader.readAsText(file);
+}
+
+// mặc định
+let today = new Date();
+document.getElementById("month").value = today.getMonth()+1;
+document.getElementById("year").value = today.getFullYear();
+
+generateCalendar();
+
+</script>
+
+</body>
+</html>
