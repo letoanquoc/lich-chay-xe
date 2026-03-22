@@ -2,162 +2,172 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lịch chạy xe</title>
 
 <style>
-body { font-family: Arial; padding:10px; background:#f5f5f5;}
-h2 { text-align:center;}
-.controls { text-align:center; margin-bottom:10px;}
-table { width:100%; border-collapse:collapse; background:white;}
-th,td { border:1px solid #ccc; padding:6px; text-align:center; font-size:12px;}
-th { background:#007AFF; color:white;}
-select { width:100%;}
-.summary { margin-top:10px; text-align:center; font-weight:bold;}
-button { margin:3px; }
+body {
+    font-family: -apple-system;
+    margin:0;
+    background:#f2f2f7;
+}
+
+/* HEADER */
+.header {
+    background:#007AFF;
+    color:white;
+    padding:15px;
+    text-align:center;
+    font-size:18px;
+    font-weight:bold;
+}
+
+/* CONTROL */
+.controls {
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:10px;
+    background:white;
+}
+
+input {
+    padding:5px;
+    width:70px;
+}
+
+/* CALENDAR */
+.calendar {
+    display:grid;
+    grid-template-columns: repeat(7,1fr);
+    gap:5px;
+    padding:10px;
+}
+
+.day {
+    background:white;
+    border-radius:10px;
+    padding:8px;
+    text-align:center;
+    font-size:12px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.day-number {
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+/* BUTTONS */
+.btn {
+    display:block;
+    margin:2px 0;
+    padding:4px;
+    border-radius:6px;
+    font-size:11px;
+    color:white;
+}
+
+.grab { background:#34C759; }
+.off { background:#FF3B30; }
+.rent { background:#007AFF; }
+
+/* SUMMARY */
+.summary {
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:white;
+    padding:10px;
+    box-shadow:0 -2px 5px rgba(0,0,0,0.1);
+    text-align:center;
+}
+
+.money {
+    font-size:20px;
+    font-weight:bold;
+    color:#007AFF;
+}
 </style>
+
 </head>
 
 <body>
 
-<h2>Lịch chạy xe</h2>
+<div class="header">🚗 Lịch chạy xe</div>
 
 <div class="controls">
-    Tháng: <input type="number" id="month" min="1" max="12">
-    Năm: <input type="number" id="year">
-    <button onclick="generateCalendar()">Tạo lịch</button><br>
-
-    <button onclick="exportData()">Xuất dữ liệu</button>
-    <input type="file" onchange="importData(event)">
+    Tháng <input type="number" id="month" min="1" max="12">
+    Năm <input type="number" id="year">
+    <button onclick="load()">Xem</button>
 </div>
 
-<table id="calendar"></table>
+<div class="calendar" id="calendar"></div>
 
 <div class="summary">
-    🚗 Chạy Grab: <span id="grabCount">0</span> ngày |
-    📅 Thuê Ngày: <span id="rentCount">0</span> ngày
+    Grab: <span id="grab">0</span> |
+    Thuê: <span id="rent">0</span><br>
+    💰 <span class="money" id="money">0</span> đ
 </div>
 
 <script>
 
-const statusList = ["", "Chạy Grab", "Không Chạy", "Thuê Ngày"];
+function key(m,y){ return `cal-${y}-${m}`; }
 
-function getKey(year, month){
-    return `calendar-${year}-${month}`;
+function getData(m,y){
+    return JSON.parse(localStorage.getItem(key(m,y)) || "{}");
 }
 
-function loadMonthData(year, month){
-    let data = localStorage.getItem(getKey(year, month));
-    return data ? JSON.parse(data) : {};
+function save(m,y,data){
+    localStorage.setItem(key(m,y), JSON.stringify(data));
 }
 
-function saveMonthData(year, month, data){
-    localStorage.setItem(getKey(year, month), JSON.stringify(data));
+function setStatus(day, status){
+    let m = month.value, y = year.value;
+    let data = getData(m,y);
+    data[day] = status;
+    save(m,y,data);
+    load();
 }
 
-function generateCalendar() {
-    const month = document.getElementById("month").value;
-    const year = document.getElementById("year").value;
+function load(){
+    let m = month.value, y = year.value;
+    let cal = document.getElementById("calendar");
+    cal.innerHTML = "";
 
-    const table = document.getElementById("calendar");
-    table.innerHTML = "";
+    let days = new Date(y,m,0).getDate();
+    let data = getData(m,y);
 
-    const days = new Date(year, month, 0).getDate();
-    let data = loadMonthData(year, month);
+    let grab=0, rent=0, money=0;
 
-    let header = "<tr>";
-    const thu = ["CN","T2","T3","T4","T5","T6","T7"];
-    for(let d of thu) header += `<th>${d}</th>`;
-    header += "</tr>";
-    table.innerHTML += header;
+    for(let d=1; d<=days; d++){
+        let s = data[d] || "";
 
-    let row = "<tr>";
-    let firstDay = new Date(year, month - 1, 1).getDay();
+        if(s=="grab"){ grab++; money+=200000; }
+        if(s=="rent"){ rent++; money+=500000; }
 
-    for(let i=0;i<firstDay;i++) row += "<td></td>";
-
-    for(let day=1; day<=days; day++){
-        let date = new Date(year, month - 1, day).getDay();
-        let value = data[day] || "";
-
-        row += `
-        <td>
-            <div>${day}</div>
-            <select onchange="updateData(${year},${month},${day}, this.value)">
-                ${statusList.map(s => `<option ${s==value?"selected":""}>${s}</option>`).join("")}
-            </select>
-        </td>
-        `;
-
-        if(date == 6) row += "</tr><tr>";
+        let html = `
+        <div class="day">
+            <div class="day-number">${d}</div>
+            <div class="btn grab" onclick="setStatus(${d},'grab')">Grab</div>
+            <div class="btn off" onclick="setStatus(${d},'off')">Nghỉ</div>
+            <div class="btn rent" onclick="setStatus(${d},'rent')">Thuê</div>
+        </div>
+`;
+        cal.innerHTML += html;
     }
 
-    row += "</tr>";
-    table.innerHTML += row;
-
-    updateSummary(data);
+    grab.innerText = grab;
+    rent.innerText = rent;
+    money.innerText = money.toLocaleString();
 }
 
-function updateData(year, month, day, value){
-    let data = loadMonthData(year, month);
-    data[day] = value;
-    saveMonthData(year, month, data);
-    updateSummary(data);
-}
+// mặc định hôm nay
+let now = new Date();
+month.value = now.getMonth()+1;
+year.value = now.getFullYear();
 
-function updateSummary(data){
-    let grab = 0;
-    let rent = 0;
-
-    for(let d in data)
-{
-if(data[d] === "Chạy Grab") grab++;
-        if(data[d] === "Thuê Ngày") rent++;
-    }
-
-    document.getElementById("grabCount").innerText = grab;
-    document.getElementById("rentCount").innerText = rent;
-}
-
-// Xuất file
-function exportData(){
-    let allData = {};
-    for(let i=0;i<localStorage.length;i++){
-        let key = localStorage.key(i);
-        if(key.startsWith("calendar-")){
-            allData[key] = JSON.parse(localStorage.getItem(key));
-        }
-    }
-
-    let blob = new Blob([JSON.stringify(allData)], {type:"application/json"});
-    let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "lich_chay_xe.json";
-    a.click();
-}
-
-// Nhập file
-function importData(event){
-    let file = event.target.files[0];
-    let reader = new FileReader();
-
-    reader.onload = function(e){
-        let data = JSON.parse(e.target.result);
-        for(let key in data){
-            localStorage.setItem(key, JSON.stringify(data[key]));
-        }
-        alert("Đã nhập dữ liệu!");
-        generateCalendar();
-    };
-
-    reader.readAsText(file);
-}
-
-// mặc định
-let today = new Date();
-document.getElementById("month").value = today.getMonth()+1;
-document.getElementById("year").value = today.getFullYear();
-
-generateCalendar();
+load();
 
 </script>
 
