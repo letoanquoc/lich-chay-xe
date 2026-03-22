@@ -2,47 +2,54 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quản lý xe PRO MAX v2.5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Quản lý xe PRO MAX v2.6</title>
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
 <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f2f2f7; color: #000; padding-bottom: 40px; }
-    .header { background: #000; color: #fff; text-align: center; padding: 16px; font-size: 20px; font-weight: 600; }
-    .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 12px 16px; background: #fff; border-bottom: 1px solid #e5e5ea; position: sticky; top: 0; z-index: 100; }
-    .nav button { background: #007aff; color: white; border: none; border-radius: 10px; padding: 8px 14px; font-size: 14px; min-width: 80px; cursor: pointer; }
+    :root { --primary: #007aff; --success: #34c759; --danger: #ff3b30; --gray: #8e8e93; --bg: #f2f2f7; }
+    body { font-family: -apple-system, system-ui, sans-serif; margin: 0; background: var(--bg); color: #000; -webkit-tap-highlight-color: transparent; }
+    .header { background: #000; color: #fff; text-align: center; padding: 16px; font-size: 20px; font-weight: 600; position: sticky; top: 0; z-index: 1000; }
+    
+    .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 12px; background: #fff; border-bottom: 1px solid #d1d1d6; }
+    .nav button { background: var(--primary); color: white; border: none; border-radius: 10px; padding: 10px 14px; font-size: 14px; cursor: pointer; font-weight: 500; }
     
     .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 12px; }
     .day-box { 
         background: white; border-radius: 10px; padding: 8px 4px; font-size: 11px; text-align: center; 
-        min-height: 85px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; 
-        display: flex; flex-direction: column; justify-content: space-between;
+        min-height: 85px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; 
+        display: flex; flex-direction: column; justify-content: space-between; border: 1px solid transparent;
     }
-    .day-box b { font-size: 15px; display: block; margin-bottom: 4px; }
-    .today-marker { border: 2px solid #007AFF !important; background: #f0f8ff; position: relative; }
-    .today-marker::after { content: "•"; color: #007aff; position: absolute; top: 2px; right: 5px; font-size: 18px; }
+    .day-box b { font-size: 15px; margin-bottom: 4px; }
+    .today-marker { border: 2px solid var(--primary) !important; background: #f0f8ff; position: relative; }
     
-    .day-view { padding: 16px; animation: fadeIn 0.3s; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .day-view { padding: 16px; max-width: 500px; margin: auto; animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    label { display: block; margin-top: 15px; font-weight: 600; color: #666; font-size: 14px; }
-    input { width: 100%; padding: 16px; margin: 8px 0; font-size: 28px; font-weight: bold; border-radius: 15px; border: 2px solid #d1d1d6; box-sizing: border-box; text-align: center; color: #007aff; background: #fff; }
-    input:focus { border-color: #007aff; outline: none; }
+    .status-group { display: flex; background: #e5e5ea; border-radius: 15px; overflow: hidden; margin: 15px 0; }
+    .status-btn { flex: 1; padding: 18px; border: none; font-weight: bold; background: transparent; color: var(--primary); transition: 0.2s; cursor: pointer; font-size: 15px; }
+    .status-btn.active-grab { background: var(--success) !important; color: white !important; }
+    .status-btn.active-rent { background: var(--primary) !important; color: white !important; }
+    .status-btn.active-off { background: var(--danger) !important; color: white !important; }
 
-    .summary-card { margin: 16px; padding: 16px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    input { width: 100%; padding: 16px; margin: 8px 0; font-size: 28px; font-weight: bold; border-radius: 15px; border: 2px solid #d1d1d6; box-sizing: border-box; text-align: center; color: var(--primary); outline: none; transition: 0.2s; }
+    input:focus { border-color: var(--primary); background: #fff; }
+
+    .summary-card { margin: 16px; padding: 16px; background: #fff; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 500px; margin-left: auto; margin-right: auto; }
     .summary-table { width: 100%; border-collapse: collapse; }
-    .summary-table td { padding: 12px 0; border-bottom: 1px solid #f2f2f7; font-size: 16px; }
-    .summary-table td:last-child { text-align: right; font-weight: 700; color: #007AFF; }
+    .summary-table td { padding: 14px 0; border-bottom: 1px solid #f2f2f7; font-size: 16px; }
+    .summary-table td:last-child { text-align: right; font-weight: 700; color: var(--primary); }
     
-    .total-highlight { font-size: 22px; font-weight: bold; color: #000; text-align: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 2px solid #f2f2f7; }
+    .total-highlight { font-size: 22px; font-weight: bold; color: #000; text-align: center; padding-bottom: 15px; border-bottom: 2px solid #f2f2f7; margin-bottom: 10px; }
     
-    button.save-btn { width: 100%; background: #34c759; color: white; padding: 18px; border-radius: 12px; font-size: 18px; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; }
-    button.back-btn { background: #8e8e93 !important; margin-bottom: 15px; }
-    button.danger { background: #ff3b30; }
-    button.excel { background: #1d6f42; }
+    .btn-block { width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; border: none; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    .save-btn { background: var(--success); color: white; box-shadow: 0 4px 12px rgba(52, 199, 89, 0.2); }
+    .back-btn { background: var(--gray); color: white; margin-bottom: 10px; }
+    .danger { background: var(--danger) !important; }
+    .excel { background: #1d6f42 !important; }
 
-    @media (min-width: 600px) { .calendar, .day-view, .summary-card { max-width: 500px; margin-left: auto; margin-right: auto; } }
+    @media (min-width: 600px) { .calendar { max-width: 500px; margin: auto; } }
 </style>
 </head>
 
@@ -51,26 +58,28 @@
 <div class="header" id="title">Quản lý Xe PRO MAX</div>
 
 <div class="nav">
-    <button onclick="prevMonth()">←</button>
+    <button onclick="changeMonth(-1)">←</button>
     <button onclick="showCalendar()">📅 Lịch</button>
     <button onclick="syncToToday()">📱 Hôm nay</button>
-    <button onclick="nextMonth()">→</button>
+    <button onclick="changeMonth(1)">→</button>
     <button class="excel" onclick="exportToExcel()">📊 Excel</button>
-    <button class="danger" onclick="resetMonth()">🗑️ Reset</button>
+    <button class="danger" onclick="resetMonth()">🗑️ Xóa</button>
 </div>
 
 <div id="calendarView"></div>
 <div id="dayView"></div>
 
 <script>
-const GRAB_BONUS = 200000;
-const RENT_BONUS = 500000;
+// --- CẤU HÌNH ---
+const BONUS = { grab: 200000, rent: 500000, off: 0, none: 0 };
 
+// --- TRẠNG THÁI APP ---
 let currentDay, month, year;
 let mode = "day"; 
 
+// --- KHỞI TẠO ---
 function syncToToday() {
-    let now = new Date();
+    const now = new Date();
     currentDay = now.getDate();
     month = now.getMonth() + 1;
     year = now.getFullYear();
@@ -78,32 +87,33 @@ function syncToToday() {
     render();
 }
 
+function changeMonth(step) {
+    let d = new Date(year, month - 1 + step, 1);
+    month = d.getMonth() + 1;
+    year = d.getFullYear();
+    render();
+}
+
+// --- XỬ LÝ TIỀN ---
 function formatMoney(v) {
-    if (!v || v === 0) return "0";
-    return Number(v).toLocaleString("vi-VN");
+    return Number(v || 0).toLocaleString("vi-VN");
 }
 
 function parseMoney(v) {
     if (typeof v === 'number') return v;
-    if (!v) return 0;
-    return Number(v.toString().replace(/[^0-9]/g, '')) || 0;
+    return parseInt(v.toString().replace(/[^0-9]/g, '')) || 0;
 }
 
+// --- DỮ LIỆU ---
 function getMonthKey() { return `pro-${year}-${month}`; }
 function getData() { return JSON.parse(localStorage.getItem(getMonthKey()) || "{}"); }
 function saveData(data) { localStorage.setItem(getMonthKey(), JSON.stringify(data)); }
 
-function prevMonth() { month = month === 1 ? 12 : month - 1; if (month === 12) year--; render(); }
-function nextMonth() { month = month === 12 ? 1 : month + 1; if (month === 1) year++; render(); }
+// --- ĐIỀU HƯỚNG ---
 function showCalendar() { mode = "calendar"; render(); }
+function openDay(d) { currentDay = d; mode = "day"; render(); window.scrollTo(0,0); }
 
-function openDay(d) {
-    currentDay = d;
-    mode = "day";
-    render();
-    window.scrollTo(0,0);
-}
-
+// --- GIAO DIỆN ---
 function render() {
     document.getElementById("title").innerText = `Tháng ${month}/${year}`;
     const calView = document.getElementById("calendarView");
@@ -121,7 +131,6 @@ function render() {
 }
 
 function renderCalendar() {
-    const calContainer = document.getElementById("calendarView");
     const data = getData();
     const daysInMonth = new Date(year, month, 0).getDate();
     const firstDay = new Date(year, month - 1, 1).getDay();
@@ -130,118 +139,122 @@ function renderCalendar() {
     let calendarHTML = '<div class="calendar">';
     for (let i = 0; i < firstDay; i++) calendarHTML += "<div></div>";
 
-    let stats = { income:0, bonus:0, daysOff:0, total:0 };
+    let stats = { income: 0, bonus: 0, off: 0 };
 
     for (let d = 1; d <= daysInMonth; d++) {
-        const v = data[d] || {};
-        const dIncome = parseMoney(v.income);
-        let dBonus = 0;
-        let statusText = "", color = "#ccc";
+        const v = data[d] || { income: 0, status: "none" };
+        const bonusAmt = BONUS[v.status] || 0;
+        const dayTotal = v.income + bonusAmt;
+
+        stats.income += v.income;
+        stats.bonus += bonusAmt;
+        if (v.status === 'off') stats.off++;
+
+        const isRealToday = (d === realToday.getDate() && month === (realToday.getMonth()+1) && year === realToday.getFullYear());
         
-        if (v.status === "grab") { statusText = "Grab"; color = "#34C759"; dBonus = GRAB_BONUS; }
-        else if (v.status === "rent") { statusText = "Thuê"; color = "#007AFF"; dBonus = RENT_BONUS; }
-        else if (v.status === "off") { statusText = "Nghỉ"; color = "#FF3B30"; stats.daysOff++; }
-
-        let dayTotal = dIncome + dBonus;
-        stats.income += dIncome; stats.bonus += dBonus; stats.total += dayTotal;
-
-        const isRealToday = d === realToday.getDate() && month === (realToday.getMonth()+1) && year === realToday.getFullYear();
+        let color = "#ccc";
+        if (v.status === 'grab') color = "var(--success)";
+        else if (v.status === 'rent') color = "var(--primary)";
+        else if (v.status === 'off') color = "var(--danger)";
 
         calendarHTML += `
         <div class="day-box ${isRealToday ? 'today-marker' : ''}" onclick="openDay(${d})">
             <b>${d}</b>
-            <span style="color:${color};font-weight:bold;">${statusText}</span>
+            <span style="color:${color}; font-weight:bold; font-size:10px;">${v.status !== 'none' ? v.status.toUpperCase() : ''}</span>
             <span style="font-size:10px; color:#444;">${dayTotal > 0 ? formatMoney(dayTotal) : ''}</span>
         </div>`;
     }
     calendarHTML += '</div>';
 
-    let statsHTML = `
+    const totalAll = stats.income + stats.bonus;
+    const statsHTML = `
     <div class="summary-card">
-        <div class="total-highlight">TỔNG THU NHẬP: ${formatMoney(stats.total)} đ</div>
+        <div class="total-highlight">TỔNG THÁNG: ${formatMoney(totalAll)} đ</div>
         <table class="summary-table">
             <tr><td>💰 Doanh thu gốc</td><td>${formatMoney(stats.income)} đ</td></tr>
             <tr><td>🚀 Tiền thưởng</td><td>${formatMoney(stats.bonus)} đ</td></tr>
-            <tr><td>🛑 Ngày nghỉ</td><td>${stats.daysOff} ngày</td></tr>
+            <tr><td>🛑 Ngày nghỉ</td><td>${stats.off} ngày</td></tr>
         </table>
     </div>`;
 
-    calContainer.innerHTML = calendarHTML + statsHTML;
+    document.getElementById("calendarView").innerHTML = calendarHTML + statsHTML;
 }
 
 function renderDay() {
     const data = getData();
-    const v = data[currentDay] || {income:0, status:"none"};
-    const status = v.status;
+    const v = data[currentDay] || { income: 0, status: "none" };
 
     document.getElementById("dayView").innerHTML = `
     <div class="day-view">
-        <button class="nav button back-btn" onclick="showCalendar()">← Lịch tháng</button>
-        <h2 style="margin: 10px 0; text-align:center;">Ngày ${currentDay} Tháng ${month}</h2>
+        <button class="btn-block back-btn" onclick="showCalendar()">← Lịch tháng</button>
+        <h2 style="text-align:center; margin:15px 0;">Ngày ${currentDay} Tháng ${month}</h2>
         
-        <div style="display:flex; background:#E5E5EA; border-radius:15px; overflow:hidden; margin:15px 0;">
-            <button onclick="setStatus('grab')" style="flex:1; padding:18px; border:none; font-weight:bold; background:${status==='grab'?'#34C759':'transparent'}; color:${status==='grab'?'white':'#007AFF'};">Grab</button>
-            <button onclick="setStatus('rent')" style="flex:1; padding:18px; border:none; font-weight:bold; background:${status==='rent'?'#007AFF':'transparent'}; color:${status==='rent'?'white':'#007AFF'};">Thuê</button>
-            <button onclick="setStatus('off')" style="flex:1; padding:18px; border:none; font-weight:bold; background:${status==='off'?'#FF3B30':'transparent'}; color:${status==='off'?'white':'#FF3B30'};">Nghỉ</button>
+        <label>Trạng thái:</label>
+        <div class="status-group">
+            <button id="btn-grab" onclick="setStatus('grab')" class="status-btn ${v.status==='grab'?'active-grab':''}">Grab</button>
+            <button id="btn-rent" onclick="setStatus('rent')" class="status-btn ${v.status==='rent'?'active-rent':''}">Thuê</button>
+            <button id="btn-off" onclick="setStatus('off')" class="status-btn ${v.status==='off'?'active-off':''}">Nghỉ</button>
         </div>
 
-        <label>Thu nhập trong ngày:</label>
+        <label>Thu nhập thực tế (đ):</label>
         <input id="income" type="tel" value="${formatMoney(v.income)}" onfocus="if(this.value==='0')this.value=''">
         
-        <div id="liveTotal" style="text-align:center; margin:20px 0; padding:25px; border-radius:20px; background:#fff; border: 2px solid #34c759;">
-            <span style="font-size:16px; color:#666;">Tổng thu hôm nay:</span><br>
-            <span style="font-size:32px; font-weight:900; color:#34c759;" id="liveVal">0 đ</span>
+        <div id="liveTotalBox" style="text-align:center; margin:20px 0; padding:20px; border-radius:20px; background:#fff; border: 2px solid var(--success);">
+            <span style="font-size:14px; color:#666;">Tổng nhận (gồm thưởng):</span><br>
+            <span style="font-size:32px; font-weight:900; color:var(--success);" id="liveVal">0 đ</span>
         </div>
 
-        <button class="save-btn" onclick="saveDay()">💾 LƯU NGÀY ${currentDay}</button>
+        <button class="btn-block save-btn" onclick="saveDay()">💾 LƯU DỮ LIỆU</button>
     </div>`;
 
     document.getElementById('income').addEventListener('input', (e) => {
-        e.target.value = formatMoney(parseMoney(e.target.value));
-        updateLiveTotal();
+        let val = parseMoney(e.target.value);
+        e.target.value = formatMoney(val);
+        updateLiveTotal(val);
     });
-    updateLiveTotal();
+    
+    updateLiveTotal(v.income);
 }
 
-function updateLiveTotal() {
+function updateLiveTotal(incomeVal) {
     const data = getData();
-    const status = (data[currentDay] || {}).status;
-    let bonus = 0;
-    if(status === 'grab') bonus = GRAB_BONUS;
-    if(status === 'rent') bonus = RENT_BONUS;
+    const currentStatus = data[currentDay]?.status || "none";
+    const bonusAmt = BONUS[currentStatus] || 0;
+    document.getElementById('liveVal').innerText = formatMoney(incomeVal + bonusAmt) + " đ";
+}
 
-    const currentIncome = parseMoney(document.getElementById('income').value);
-    document.getElementById('liveVal').innerText = formatMoney(currentIncome + bonus) + " đ";
+function setStatus(s) {
+    const data = getData();
+    const incomeInput = document.getElementById("income");
+    const currentIncome = parseMoney(incomeInput.value);
+
+    // Toggle logic
+    let newStatus = (data[currentDay]?.status === s) ? "none" : s;
+    
+    // Cập nhật ngầm dữ liệu để updateLiveTotal lấy được status mới
+    data[currentDay] = { income: currentIncome, status: newStatus };
+    saveData(data);
+
+    // Cập nhật UI nút bấm mà không render lại toàn bộ (tránh mất focus)
+    const btns = document.querySelectorAll('.status-btn');
+    btns.forEach(b => b.classList.remove('active-grab', 'active-rent', 'active-off'));
+    
+    if (newStatus !== 'none') {
+        document.getElementById('btn-' + newStatus).classList.add('active-' + newStatus);
+    }
+    
+    updateLiveTotal(currentIncome);
 }
 
 function saveDay() {
     const data = getData();
     const incomeVal = parseMoney(document.getElementById("income").value);
     
-    if(!data[currentDay]) data[currentDay] = {status: "none"};
+    if(!data[currentDay]) data[currentDay] = { status: "none" };
     data[currentDay].income = incomeVal;
     
     saveData(data);
     showCalendar();
-}
-
-// HÀM QUAN TRỌNG: CHỨC NĂNG TOGGLE (BẬT/TẮT)
-function setStatus(s) {
-    const data = getData();
-    if(!data[currentDay]) data[currentDay] = {income:0, status:"none"};
-    
-    // Lưu lại số tiền đang gõ trên màn hình để không bị mất khi đổi trạng thái
-    data[currentDay].income = parseMoney(document.getElementById("income").value);
-
-    // KIỂM TRA: Nếu trạng thái mới bấm trùng với cái đang có -> Reset về "none"
-    if (data[currentDay].status === s) {
-        data[currentDay].status = "none";
-    } else {
-        data[currentDay].status = s;
-    }
-    
-    saveData(data);
-    render(); // Vẽ lại giao diện để cập nhật màu nút và tổng tiền
 }
 
 function exportToExcel() {
@@ -249,29 +262,30 @@ function exportToExcel() {
     const daysInMonth = new Date(year, month, 0).getDate();
     let rows = [];
     for (let d = 1; d <= daysInMonth; d++) {
-        const v = data[d] || {};
-        const bonus = v.status === 'grab' ? GRAB_BONUS : (v.status === 'rent' ? RENT_BONUS : 0);
+        const v = data[d] || { income: 0, status: "" };
+        const bonusAmt = BONUS[v.status] || 0;
         rows.push({
             "Ngày": `${d}/${month}/${year}`,
-            "Trạng thái": v.status || "",
-            "Doanh thu": v.income || 0,
-            "Thưởng": bonus,
-            "Tổng cộng": (v.income || 0) + bonus
+            "Trạng thái": v.status.toUpperCase(),
+            "Thu nhập gốc": v.income,
+            "Thưởng": bonusAmt,
+            "Tổng": v.income + bonusAmt
         });
     }
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Báo cáo");
-    XLSX.writeFile(wb, `Xe_PRO_${month}_${year}.xlsx`);
+    XLSX.writeFile(wb, `Xe_PRO_MAX_${month}_${year}.xlsx`);
 }
 
 function resetMonth() {
-    if (confirm("Xóa toàn bộ dữ liệu tháng " + month + "?")) {
+    if (confirm(`Bạn muốn xóa trắng dữ liệu tháng ${month}?`)) {
         localStorage.removeItem(getMonthKey());
         render();
     }
 }
 
+// Chạy app
 syncToToday();
 </script>
 </body>
