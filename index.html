@@ -1,3 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lịch chạy xe</title>
+
+<style>
+body { font-family: -apple-system; margin:0; background:#f2f2f7;}
+.header { background:#007AFF; color:white; padding:15px; text-align:center; font-size:18px;}
+.controls { display:flex; justify-content:center; gap:10px; padding:10px; background:white;}
+input { padding:5px; width:70px;}
+
+.calendar {
+    display:grid;
+    grid-template-columns: repeat(7,1fr);
+    gap:6px;
+    padding:10px;
+}
+
+.day {
+    background:white;
+    border-radius:10px;
+    padding:8px;
+    text-align:center;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.day-number { font-weight:bold; margin-bottom:5px;}
+
+.btn {
+    margin:2px 0;
+    padding:5px;
+    border-radius:6px;
+    font-size:11px;
+    color:white;
+}
+
+.grab { background:#34C759;}
+.off { background:#FF3B30;}
+.rent { background:#007AFF;}
+
+.active { outline:2px solid black;}
+
+.summary {
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:white;
+    padding:10px;
+    text-align:center;
+    box-shadow:0 -2px 5px rgba(0,0,0,0.1);
+}
+
+.money { font-size:20px; font-weight:bold; color:#007AFF;}
+</style>
+</head>
+
+<body>
+
+<div class="header">🚗 Lịch chạy xe</div>
+
+<div class="controls">
+    Tháng <input type="number" id="month">
+    Năm <input type="number" id="year">
+    <button onclick="render()">Xem</button>
+</div>
+
+<div class="calendar" id="calendar"></div>
+
+<div class="summary">
+    Grab: <span id="grabCount">0</span> |
+    Thuê: <span id="rentCount">0</span><br>
+    💰 <span class="money" id="totalMoney">0</span> đ
+</div>
+
+<script>
+
+function key(m,y){ return `cal-${y}-${m}`; }
+
+function getData(m,y){
+    return JSON.parse(localStorage.getItem(key(m,y)) || "{}");
+}
+
+function save(m,y,data){
+    localStorage.setItem(key(m,y), JSON.stringify(data));
+}
+
+function setStatus(day, status){
+    let m = document.getElementById("month").value;
+    let y = document.getElementById("year").value;
+
+    let data = getData(m,y);
+    data[day] = status;
+    save(m,y,data);
+
+    render();
+}
+
+function render(){
+    let m = document.getElementById("month").value;
+    let y = document.getElementById("year").value;
+
+    let cal = document.getElementById("calendar");
+    cal.innerHTML = "";
+
+    let days = new Date(y,m,0).getDate();
+    let data = getData(m,y);
+
+    let grabCount = 0;
+    let rentCount = 0;
+    let totalMoney = 0;
+
+    for(let d=1; d<=days; d++){
+        let s = data[d] || "";
+
+        if(s=="grab"){ grabCount++; totalMoney+=200000; }
+        if(s=="rent"){ rentCount++; totalMoney+=500000; }
+
+        let html = `
+        <div class="day">
+            <div class="day-number">${d}</div>
+            <div class="btn grab ${s=='grab'?'active':''}" onclick="setStatus(${d},'grab')">Grab</div>
+            <div class="btn off ${s=='off'?'active':''}" onclick="setStatus(${d},'off')">Nghỉ</div>
 <div class="btn rent ${s=='rent'?'active':''}" onclick="setStatus(${d},'rent')">Thuê</div>
         </div>
         `;
