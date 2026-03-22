@@ -3,241 +3,276 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lịch chạy xe</title>
+<title>Quản lý xe PRO MAX v2.5</title>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
 <style>
-body { font-family:-apple-system; margin:0; background:#f2f2f7;}
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f2f2f7; color: #000; padding-bottom: 40px; }
+    .header { background: #000; color: #fff; text-align: center; padding: 16px; font-size: 20px; font-weight: 600; }
+    .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 12px 16px; background: #fff; border-bottom: 1px solid #e5e5ea; position: sticky; top: 0; z-index: 100; }
+    .nav button { background: #007aff; color: white; border: none; border-radius: 10px; padding: 8px 14px; font-size: 14px; min-width: 80px; cursor: pointer; }
+    
+    .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 12px; }
+    .day-box { 
+        background: white; border-radius: 10px; padding: 8px 4px; font-size: 11px; text-align: center; 
+        min-height: 85px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; 
+        display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .day-box b { font-size: 15px; display: block; margin-bottom: 4px; }
+    .today-marker { border: 2px solid #007AFF !important; background: #f0f8ff; position: relative; }
+    .today-marker::after { content: "•"; color: #007aff; position: absolute; top: 2px; right: 5px; font-size: 18px; }
+    
+    .day-view { padding: 16px; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-.header {
-    background:#007AFF;
-    color:white;
-    padding:15px;
-    text-align:center;
-    font-size:18px;
-    font-weight:bold;
-}
+    label { display: block; margin-top: 15px; font-weight: 600; color: #666; font-size: 14px; }
+    input { width: 100%; padding: 16px; margin: 8px 0; font-size: 28px; font-weight: bold; border-radius: 15px; border: 2px solid #d1d1d6; box-sizing: border-box; text-align: center; color: #007aff; background: #fff; }
+    input:focus { border-color: #007aff; outline: none; }
 
-.controls {
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:8px;
-    padding:10px;
-    background:white;
-}
+    .summary-card { margin: 16px; padding: 16px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .summary-table { width: 100%; border-collapse: collapse; }
+    .summary-table td { padding: 12px 0; border-bottom: 1px solid #f2f2f7; font-size: 16px; }
+    .summary-table td:last-child { text-align: right; font-weight: 700; color: #007AFF; }
+    
+    .total-highlight { font-size: 22px; font-weight: bold; color: #000; text-align: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 2px solid #f2f2f7; }
+    
+    button.save-btn { width: 100%; background: #34c759; color: white; padding: 18px; border-radius: 12px; font-size: 18px; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    button.back-btn { background: #8e8e93 !important; margin-bottom: 15px; }
+    button.danger { background: #ff3b30; }
+    button.excel { background: #1d6f42; }
 
-input { padding:5px; width:70px;}
-
-button {
-    padding:6px 10px;
-    border:none;
-    border-radius:6px;
-    background:#007AFF;
-    color:white;
-}
-
-.calendar {
-    display:grid;
-    grid-template-columns: repeat(7,1fr);
-    gap:6px;
-    padding:10px;
-}
-
-.weekday {
-    text-align:center;
-    font-weight:bold;
-}
-
-.sunday { color:red; }
-
-.day {
-    background:white;
-    border-radius:10px;
-    padding:6px;
-    text-align:center;
-    box-shadow:0 2px 5px rgba(0,0,0,0.1);
-}
-
-.today {
-    border:2px solid #007AFF;
-}
-
-.day-number {
-    font-weight:bold;
-    margin-bottom:4px;
-}
-
-.btn {
-    margin:2px 0;
-    padding:4px;
-    border-radius:6px;
-    font-size:11px;
-    color:white;
-}
-
-.grab { background:#34C759;}
-.off { background:#FF3B30;}
-.rent { background:#007AFF;}
-
-.active { outline:2px solid black;}
-
-.summary {
-    position:fixed;
-    bottom:0;
-    width:100%;
-    background:white;
-    padding:10px;
-    text-align:center;
-    box-shadow:0 -2px 5px rgba(0,0,0,0.1);
-}
-
-.money { font-size:20px; font-weight:bold; color:#007AFF;}
+    @media (min-width: 600px) { .calendar, .day-view, .summary-card { max-width: 500px; margin-left: auto; margin-right: auto; } }
 </style>
 </head>
 
 <body>
 
-<div class="header">🚗 Lịch chạy xe</div>
+<div class="header" id="title">Quản lý Xe PRO MAX</div>
 
-<div class="controls">
-    Tháng <input type="number" id="month">
-    Năm <input type="number" id="year">
-    <button onclick="render()">Xem</button>
-    <button onclick="exportData()">💾 Backup</button>
-    <input type="file" onchange="importData(event)">
+<div class="nav">
+    <button onclick="prevMonth()">←</button>
+    <button onclick="showCalendar()">📅 Lịch</button>
+    <button onclick="syncToToday()">📱 Hôm nay</button>
+    <button onclick="nextMonth()">→</button>
+    <button class="excel" onclick="exportToExcel()">📊 Excel</button>
+    <button class="danger" onclick="resetMonth()">🗑️ Reset</button>
 </div>
 
-<div class="calendar" id="calendar"></div>
-
-<div class="summary">
-    Grab: <span id="grabCount">0</span> |
-    Thuê: <span id="rentCount">0</span><br>
-    💰 <span class="money" id="totalMoney">0</span> đ
-</div>
+<div id="calendarView"></div>
+<div id="dayView"></div>
 
 <script>
+const GRAB_BONUS = 200000;
+const RENT_BONUS = 500000;
 
-// ===== DATA =====
-function key(m,y){ return `cal-${y}-${m}`; }
+let currentDay, month, year;
+let mode = "day"; 
 
-function getData(m,y){
-    return JSON.parse(localStorage.getItem(key(m,y)) || "{}");
-}
-
-function save(m,y,data){
-    localStorage.setItem(key(m,y), JSON.stringify(data));
-}
-
-// ===== SET =====
-function setStatus(day, status){
-    let m = month.value;
-    let y = year.value;
-
-    let data = getData(m,y);
-    data[day] = status;
-    save(m,y,data);
-
+function syncToToday() {
+    let now = new Date();
+    currentDay = now.getDate();
+    month = now.getMonth() + 1;
+    year = now.getFullYear();
+    mode = "day";
     render();
 }
 
-// ===== RENDER =====
-function render(){
-    let m = month.value;
-    let y = year.value;
+function formatMoney(v) {
+    if (!v || v === 0) return "0";
+    return Number(v).toLocaleString("vi-VN");
+}
 
-    let cal = document.getElementById("calendar");
-    cal.innerHTML = "";
+function parseMoney(v) {
+    if (typeof v === 'number') return v;
+    if (!v) return 0;
+    return Number(v.toString().replace(/[^0-9]/g, '')) || 0;
+}
 
-    let today = new Date();
-    let days = new Date(y,m,0).getDate();
-    let firstDay = new Date(y,m-1,1).getDay();
+function getMonthKey() { return `pro-${year}-${month}`; }
+function getData() { return JSON.parse(localStorage.getItem(getMonthKey()) || "{}"); }
+function saveData(data) { localStorage.setItem(getMonthKey(), JSON.stringify(data)); }
 
-    let data = getData(m,y);
+function prevMonth() { month = month === 1 ? 12 : month - 1; if (month === 12) year--; render(); }
+function nextMonth() { month = month === 12 ? 1 : month + 1; if (month === 1) year++; render(); }
+function showCalendar() { mode = "calendar"; render(); }
 
-    let grabCount = 0;
-    let rentCount = 0;
-    let totalMoney = 0;
+function openDay(d) {
+    currentDay = d;
+    mode = "day";
+    render();
+    window.scrollTo(0,0);
+}
 
-    let thu = ["CN","T2","T3","T4","T5","T6","T7"];
-// header thứ
-    for(let i=0;i<7;i++){
-        cal.innerHTML += `<div class="weekday ${i==0?'sunday':''}">${thu[i]}</div>`;
+function render() {
+    document.getElementById("title").innerText = `Tháng ${month}/${year}`;
+    const calView = document.getElementById("calendarView");
+    const dayView = document.getElementById("dayView");
+
+    if (mode === "calendar") {
+        calView.style.display = "block";
+        dayView.style.display = "none";
+        renderCalendar();
+    } else {
+        calView.style.display = "none";
+        dayView.style.display = "block";
+        renderDay();
     }
+}
 
-    // ô trống
-    for(let i=0;i<firstDay;i++){
-        cal.innerHTML += `<div></div>`;
+function renderCalendar() {
+    const calContainer = document.getElementById("calendarView");
+    const data = getData();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const realToday = new Date();
+
+    let calendarHTML = '<div class="calendar">';
+    for (let i = 0; i < firstDay; i++) calendarHTML += "<div></div>";
+
+    let stats = { income:0, bonus:0, daysOff:0, total:0 };
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const v = data[d] || {};
+        const dIncome = parseMoney(v.income);
+        let dBonus = 0;
+        let statusText = "", color = "#ccc";
+        
+        if (v.status === "grab") { statusText = "Grab"; color = "#34C759"; dBonus = GRAB_BONUS; }
+        else if (v.status === "rent") { statusText = "Thuê"; color = "#007AFF"; dBonus = RENT_BONUS; }
+        else if (v.status === "off") { statusText = "Nghỉ"; color = "#FF3B30"; stats.daysOff++; }
+
+        let dayTotal = dIncome + dBonus;
+        stats.income += dIncome; stats.bonus += dBonus; stats.total += dayTotal;
+
+        const isRealToday = d === realToday.getDate() && month === (realToday.getMonth()+1) && year === realToday.getFullYear();
+
+        calendarHTML += `
+        <div class="day-box ${isRealToday ? 'today-marker' : ''}" onclick="openDay(${d})">
+            <b>${d}</b>
+            <span style="color:${color};font-weight:bold;">${statusText}</span>
+            <span style="font-size:10px; color:#444;">${dayTotal > 0 ? formatMoney(dayTotal) : ''}</span>
+        </div>`;
     }
+    calendarHTML += '</div>';
 
-    // ngày
-    for(let d=1; d<=days; d++){
-        let s = data[d] || "";
-        let isToday = (d==today.getDate() && m==today.getMonth()+1 && y==today.getFullYear());
+    let statsHTML = `
+    <div class="summary-card">
+        <div class="total-highlight">TỔNG THU NHẬP: ${formatMoney(stats.total)} đ</div>
+        <table class="summary-table">
+            <tr><td>💰 Doanh thu gốc</td><td>${formatMoney(stats.income)} đ</td></tr>
+            <tr><td>🚀 Tiền thưởng</td><td>${formatMoney(stats.bonus)} đ</td></tr>
+            <tr><td>🛑 Ngày nghỉ</td><td>${stats.daysOff} ngày</td></tr>
+        </table>
+    </div>`;
 
-        if(s=="grab"){ grabCount++; totalMoney+=200000; }
-        if(s=="rent"){ rentCount++; totalMoney+=500000; }
+    calContainer.innerHTML = calendarHTML + statsHTML;
+}
 
-        let html = `
-        <div class="day ${isToday?'today':''}">
-            <div class="day-number">${d}</div>
-            <div class="btn grab ${s=='grab'?'active':''}" onclick="setStatus(${d},'grab')">Grab</div>
-            <div class="btn off ${s=='off'?'active':''}" onclick="setStatus(${d},'off')">Nghỉ</div>
-            <div class="btn rent ${s=='rent'?'active':''}" onclick="setStatus(${d},'rent')">Thuê</div>
+function renderDay() {
+    const data = getData();
+    const v = data[currentDay] || {income:0, status:"none"};
+    const status = v.status;
+
+    document.getElementById("dayView").innerHTML = `
+    <div class="day-view">
+        <button class="nav button back-btn" onclick="showCalendar()">← Lịch tháng</button>
+        <h2 style="margin: 10px 0; text-align:center;">Ngày ${currentDay} Tháng ${month}</h2>
+        
+        <div style="display:flex; background:#E5E5EA; border-radius:15px; overflow:hidden; margin:15px 0;">
+            <button onclick="setStatus('grab')" style="flex:1; padding:18px; border:none; font-weight:bold; background:${status==='grab'?'#34C759':'transparent'}; color:${status==='grab'?'white':'#007AFF'};">Grab</button>
+            <button onclick="setStatus('rent')" style="flex:1; padding:18px; border:none; font-weight:bold; background:${status==='rent'?'#007AFF':'transparent'}; color:${status==='rent'?'white':'#007AFF'};">Thuê</button>
+            <button onclick="setStatus('off')" style="flex:1; padding:18px; border:none; font-weight:bold; background:${status==='off'?'#FF3B30':'transparent'}; color:${status==='off'?'white':'#FF3B30'};">Nghỉ</button>
         </div>
-        `;
-        cal.innerHTML += html;
-    }
 
-    grabCountEl.innerText = grabCount;
-    rentCountEl.innerText = rentCount;
-    totalMoneyEl.innerText = totalMoney.toLocaleString();
+        <label>Thu nhập trong ngày:</label>
+        <input id="income" type="tel" value="${formatMoney(v.income)}" onfocus="if(this.value==='0')this.value=''">
+        
+        <div id="liveTotal" style="text-align:center; margin:20px 0; padding:25px; border-radius:20px; background:#fff; border: 2px solid #34c759;">
+            <span style="font-size:16px; color:#666;">Tổng thu hôm nay:</span><br>
+            <span style="font-size:32px; font-weight:900; color:#34c759;" id="liveVal">0 đ</span>
+        </div>
+
+        <button class="save-btn" onclick="saveDay()">💾 LƯU NGÀY ${currentDay}</button>
+    </div>`;
+
+    document.getElementById('income').addEventListener('input', (e) => {
+        e.target.value = formatMoney(parseMoney(e.target.value));
+        updateLiveTotal();
+    });
+    updateLiveTotal();
 }
 
-// ===== BACKUP =====
-function exportData(){
-    let allData = {};
-    for(let i=0;i<localStorage.length;i++){
-        let k = localStorage.key(i);
-        if(k.startsWith("cal-")){
-            allData[k] = JSON.parse(localStorage.getItem(k));
-        }
-    }
-    let blob = new Blob([JSON.stringify(allData)], {type:"application/json"});
-    let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "backup_lich.json";
-    a.click();
+function updateLiveTotal() {
+    const data = getData();
+    const status = (data[currentDay] || {}).status;
+    let bonus = 0;
+    if(status === 'grab') bonus = GRAB_BONUS;
+    if(status === 'rent') bonus = RENT_BONUS;
+
+    const currentIncome = parseMoney(document.getElementById('income').value);
+    document.getElementById('liveVal').innerText = formatMoney(currentIncome + bonus) + " đ";
 }
 
-// ===== IMPORT =====
-function importData(event){
-    let file = event.target.files[0];
-    let reader = new FileReader();
+function saveDay() {
+    const data = getData();
+    const incomeVal = parseMoney(document.getElementById("income").value);
+    
+    if(!data[currentDay]) data[currentDay] = {status: "none"};
+    data[currentDay].income = incomeVal;
+    
+    saveData(data);
+    showCalendar();
+}
 
-    reader.onload = function(e){
-        let data = JSON.parse(e.target.result);
-        for(let k in data){
-            localStorage.setItem(k, JSON.stringify(data[k]));
-        }
-        alert("Khôi phục thành công!");
+// HÀM QUAN TRỌNG: CHỨC NĂNG TOGGLE (BẬT/TẮT)
+function setStatus(s) {
+    const data = getData();
+    if(!data[currentDay]) data[currentDay] = {income:0, status:"none"};
+    
+    // Lưu lại số tiền đang gõ trên màn hình để không bị mất khi đổi trạng thái
+    data[currentDay].income = parseMoney(document.getElementById("income").value);
+
+    // KIỂM TRA: Nếu trạng thái mới bấm trùng với cái đang có -> Reset về "none"
+    if (data[currentDay].status === s) {
+        data[currentDay].status = "none";
+    } else {
+        data[currentDay].status = s;
+    }
+    
+    saveData(data);
+    render(); // Vẽ lại giao diện để cập nhật màu nút và tổng tiền
+}
+
+function exportToExcel() {
+    const data = getData();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    let rows = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+        const v = data[d] || {};
+        const bonus = v.status === 'grab' ? GRAB_BONUS : (v.status === 'rent' ? RENT_BONUS : 0);
+        rows.push({
+            "Ngày": `${d}/${month}/${year}`,
+            "Trạng thái": v.status || "",
+            "Doanh thu": v.income || 0,
+            "Thưởng": bonus,
+            "Tổng cộng": (v.income || 0) + bonus
+        });
+    }
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Báo cáo");
+    XLSX.writeFile(wb, `Xe_PRO_${month}_${year}.xlsx`);
+}
+
+function resetMonth() {
+    if (confirm("Xóa toàn bộ dữ liệu tháng " + month + "?")) {
+        localStorage.removeItem(getMonthKey());
         render();
-    };
-
-    reader.readAsText(file);
+    }
 }
 
-// ===== DEFAULT =====
-let now = new Date();
-month.value = now.getMonth()+1;
-year.value = now.getFullYear();
-
-let grabCountEl = document.getElementById("grabCount");
-let rentCountEl = document.getElementById("rentCount");
-let totalMoneyEl = document.getElementById("totalMoney");
-
-render();
-
+syncToToday();
 </script>
-
 </body>
 </html>
