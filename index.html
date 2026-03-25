@@ -3,35 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Xe Cloud Pro v11.0</title>
+    <title>VF5 Plus Manager Pro</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <style>
         :root { --primary: #007aff; --success: #34c759; --danger: #ff3b30; --warning: #ff9500; --etc: #5856d6; --bg: #f2f2f7; }
-        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); color: #333; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); color: #333; line-height: 1.4; }
         .loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { 0% { transform: rotate(360deg); } }
+        
+        /* Auth & Layout */
         #auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 25px; background: #fff; box-sizing: border-box; }
-        .auth-input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; box-sizing: border-box; }
+        .auth-input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; }
         #app-content { display: none; }
         .header { background: #000; color: #fff; text-align: center; padding: 15px; font-weight: bold; position: sticky; top: 0; z-index: 1000; }
         .tab-bar { display: flex; background: #fff; border-bottom: 1px solid #ddd; padding: 5px; position: sticky; top: 48px; z-index: 999; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #888; border-radius: 8px; font-size: 12px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #888; font-size: 12px; border-radius: 8px; }
         .tab-active { background: var(--primary); color: #fff !important; }
+
+        /* UI Components */
         .card { background: #fff; margin: 12px; padding: 15px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .label-min { font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; display: block; }
         .shift-box { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
         .shift-box.pm { border-left-color: var(--etc); }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         input { width: 100%; padding: 10px; border: 1px solid #eee; border-radius: 8px; font-weight: bold; text-align: center; box-sizing: border-box; font-size: 15px; }
-        .btn-st { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; background: #eee; font-size: 11px; }
+        .btn-st { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; background: #eee; font-size: 11px; transition: 0.2s; }
         .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
         .btn-main { width: 100%; padding: 16px; background: var(--success); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; margin-top: 10px; }
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
         .day-box { background: #fff; border-radius: 8px; padding: 8px 2px; text-align: center; border: 1px solid #eee; font-size: 11px; cursor: pointer; min-height: 45px; }
         .today { border: 2px solid var(--primary); background: #f0f7ff; }
+        .eff-val { font-size: 10px; color: #666; font-weight: normal; }
     </style>
 </head>
 <body>
@@ -39,11 +44,11 @@
 <div id="loading" class="loader"><div class="spinner"></div></div>
 
 <div id="auth-screen">
-    <h2 id="auth-title">Quản Lý Xe Cloud</h2>
+    <h2>VF5 Plus Pro</h2>
     <input type="email" id="auth-email" class="auth-input" placeholder="Email">
     <input type="password" id="auth-pass" class="auth-input" placeholder="Mật khẩu">
     <button class="btn-main" onclick="handleAuth()" id="btn-auth-text" style="background:var(--primary)">ĐĂNG NHẬP</button>
-    <p onclick="toggleAuthMode()" style="font-size:13px; color:var(--primary); margin-top:15px">Chưa có tài khoản? Đăng ký</p>
+    <p onclick="toggleAuthMode()" style="font-size:13px; color:var(--primary); margin-top:15px; cursor:pointer">Chưa có tài khoản? Đăng ký</p>
 </div>
 
 <div id="app-content">
@@ -51,60 +56,70 @@
     <div class="tab-bar">
         <button id="tabDay" class="tab-btn tab-active" onclick="switchTab('day')">HÀNG NGÀY</button>
         <button id="tabMonth" class="tab-btn" onclick="switchTab('month')">THỐNG KÊ</button>
-        <button id="tabUser" class="tab-btn" onclick="switchTab('user')">CÁ NHÂN</button>
+        <button id="tabUser" class="tab-btn" onclick="switchTab('user')">HỆ THỐNG</button>
     </div>
 
     <div id="viewDay" class="page">
         <div class="card">
-            <h3 id="dayLabel" style="text-align:center; margin:0 0 15px 0; font-size:16px;">...</h3>
+            <h3 id="dayLabel" style="text-align:center; margin-bottom:15px;">...</h3>
             <div style="display:flex; gap:8px; margin-bottom:15px">
                 <button id="btn-grab" class="btn-st" onclick="setSt('grab')">GRAB</button>
                 <button id="btn-rent" class="btn-st" onclick="setSt('rent')">THUÊ</button>
                 <button id="btn-off" class="btn-st" onclick="setSt('off')">NGHỈ</button>
             </div>
 
-            <div class="shift-box"><span class="label-min" style="color:var(--primary)">Ca Sáng (AM)</span>
+            <div class="shift-box">
+                <span class="label-min" style="color:var(--primary)">Ca Sáng (AM) <span id="eff-am" class="eff-val"></span></span>
                 <div class="grid-2">
-                    <input id="am-os" type="number" placeholder="ODO Đầu" oninput="liveDay()"><input id="am-oe" type="number" placeholder="ODO Cuối" oninput="liveDay()">
-                    <input id="am-bs" type="number" placeholder="% Pin Tr" oninput="liveDay()"><input id="am-be" type="number" placeholder="% Pin S" oninput="liveDay()">
+                    <input id="am-os" type="number" placeholder="ODO Đầu" oninput="liveDay()">
+                    <input id="am-oe" type="number" placeholder="ODO Cuối" oninput="liveDay()">
+                    <input id="am-bs" type="number" placeholder="% Pin Tr" oninput="liveDay()">
+                    <input id="am-be" type="number" placeholder="% Pin S" oninput="liveDay()">
                 </div>
             </div>
 
-            <div class="shift-box pm"><span class="label-min" style="color:var(--etc)">Ca Chiều (PM)</span>
+            <div class="shift-box pm">
+                <span class="label-min" style="color:var(--etc)">Ca Chiều (PM) <span id="eff-pm" class="eff-val"></span></span>
                 <div class="grid-2">
-                    <input id="pm-os" type="number" placeholder="ODO Đầu" oninput="liveDay()"><input id="pm-oe" type="number" placeholder="ODO Cuối" oninput="liveDay()">
-                    <input id="pm-bs" type="number" placeholder="% Pin Tr" oninput="liveDay()"><input id="pm-be" type="number" placeholder="% Pin S" oninput="liveDay()">
+                    <input id="pm-os" type="number" placeholder="ODO Đầu" oninput="liveDay()">
+                    <input id="pm-oe" type="number" placeholder="ODO Cuối" oninput="liveDay()">
+                    <input id="pm-bs" type="number" placeholder="% Pin Tr" oninput="liveDay()">
+                    <input id="pm-be" type="number" placeholder="% Pin S" oninput="liveDay()">
                 </div>
             </div>
 
             <div class="grid-2">
-                <div><span class="label-min">Tiền khách trả:</span><input id="in-inc" type="tel" oninput="formatInp(this); liveDay();"></div>
+                <div><span class="label-min">Tiền khách:</span><input id="in-inc" type="tel" oninput="formatInp(this); liveDay();"></div>
                 <div><span class="label-min">Phí ETC:</span><input id="in-etc" type="tel" oninput="formatInp(this); liveDay();" style="color:var(--etc)"></div>
             </div>
-            <div style="margin-top:10px"><span class="label-min">Chi phí khác (Rửa xe, sạc, ăn...):</span><input id="in-exp" type="tel" oninput="formatInp(this); liveDay();" style="color:var(--danger)"></div>
+            <div style="margin-top:10px"><span class="label-min">Chi phí khác (Rửa xe, sạc ngoài...):</span><input id="in-exp" type="tel" oninput="formatInp(this); liveDay();" style="color:var(--danger)"></div>
             
             <div class="card" style="margin:15px 0 0 0; background:#f0f7ff; box-shadow:none;">
-                <div class="row"><span>Quãng đường:</span><b id="d-km">0 km</b></div>
-                <div class="row"><span>Lợi nhuận:</span><b id="d-profit" style="color:var(--primary)">0 đ</b></div>
+                <div class="row"><span>Tổng Km / Pin nạp:</span><b id="d-summary">0 km / 0%</b></div>
+                <div class="row"><span>Tiền điện sạc (ước tính):</span><b id="d-elec" style="color:var(--warning)">0 đ</b></div>
+                <div class="row" style="border:none; color:var(--primary); font-size:16px; padding-top:10px">
+                    <b>LỢI NHUẬN:</b><b id="d-profit">0 đ</b>
+                </div>
             </div>
-            <button class="btn-main" onclick="saveDay()">💾 LƯU DỮ LIỆU</button>
+            <button class="btn-main" onclick="saveDay()">💾 LƯU DỮ LIỆU CLOUD</button>
         </div>
     </div>
 
     <div id="viewMonth" class="page" style="display:none">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <button onclick="changeM(-1)">←</button><b id="calMonthTitle">Tháng ...</b><button onclick="changeM(1)">→</button>
+                <button onclick="changeM(-1)" style="border:none;background:#eee;padding:5px 15px;border-radius:6px">←</button>
+                <b id="calMonthTitle">...</b>
+                <button onclick="changeM(1)" style="border:none;background:#eee;padding:5px 15px;border-radius:6px">→</button>
             </div>
             <div id="calendarGrid" class="calendar"></div>
         </div>
         <div class="card">
-            <span class="label-min">BÁO CÁO CHI TIẾT THÁNG</span>
-            <div class="row"><span>Tổng thu (Khách):</span><b id="m-inc">0 đ</b></div>
-            <div class="row"><span>Tổng thưởng:</span><b id="m-bon">0 đ</b></div>
-            <div class="row"><span>Tổng phí ETC:</span><b id="m-etc" style="color:var(--etc)">0 đ</b></div>
-            <div class="row"><span>Chi phí khác:</span><b id="m-exp" style="color:var(--danger)">0 đ</b></div>
-            <div class="row"><span>Tổng Km:</span><b id="m-km">0 km</b></div>
+            <span class="label-min">BÁO CÁO VẬN HÀNH THÁNG</span>
+            <div class="row"><span>Doanh thu (Khách+Thưởng):</span><b id="m-inc">0 đ</b></div>
+            <div class="row"><span>Phí ETC:</span><b id="m-etc" style="color:var(--etc)">0 đ</b></div>
+            <div class="row"><span>Tiền điện sạc trạm:</span><b id="m-elec" style="color:var(--warning)">0 đ</b></div>
+            <div class="row"><span>Quãng đường / Hiệu suất:</span><b id="m-km-eff">0 km / 0 Wh/km</b></div>
             <div class="row" style="border:none; color:var(--success); font-size:18px; padding-top:10px">
                 <b>LỢI NHUẬN RÒNG:</b><b id="m-total">0 đ</b>
             </div>
@@ -112,28 +127,31 @@
     </div>
 
     <div id="viewUser" class="page" style="display:none">
-        <div class="card" id="maint-card" style="border-left: 5px solid var(--warning);">
-            <span class="label-min" style="color:var(--warning)">BẢO TRÌ (15,000KM)</span>
-            <div class="row"><span>Hiện tại:</span><b id="maint-odo-curr">0 km</b></div>
-            <div class="row"><span>Còn lại:</span><b id="maint-remain" style="color:var(--danger)">0 km</b></div>
+        <div class="card" style="border-left: 5px solid var(--warning);">
+            <span class="label-min" style="color:var(--warning)">BẢO TRÌ VF5 (MỐC 15.000 KM)</span>
+            <div class="row"><span>ODO hiện tại:</span><b id="maint-odo">0 km</b></div>
+            <div class="row"><span>Còn lại:</span><b id="maint-rem" style="color:var(--danger)">0 km</b></div>
             <div style="background:#eee; height:8px; border-radius:4px; margin-top:10px;"><div id="maint-bar" style="width:0%; background:var(--warning); height:100%; border-radius:4px;"></div></div>
         </div>
         <div class="card">
-            <span class="label-min">Biển số:</span><input id="set-car" type="text" placeholder="30A-XXXXX">
-            <button class="btn-main" onclick="saveCar()" style="background:var(--primary)">CẬP NHẬT</button>
-            <button class="btn-main" onclick="checkFineAuto()" style="background:var(--danger)">TRA PHẠT NGUỘI</button>
+            <span class="label-min">Biển số xe:</span>
+            <input id="set-car" type="text" placeholder="30L-XXXXX">
+            <button class="btn-main" onclick="saveCar()" style="background:var(--primary)">CẬP NHẬT BIỂN SỐ</button>
+            <button class="btn-main" onclick="checkFine()" style="background:var(--danger)">TRA PHẠT NGUỘI</button>
         </div>
         <button onclick="auth.signOut()" style="margin:20px; width:calc(100% - 40px); background:none; border:1px solid var(--danger); color:var(--danger); padding:12px; border-radius:12px; font-weight:bold">ĐĂNG XUẤT</button>
     </div>
 </div>
 
 <script>
+// Firebase Config - Replace with your own
 const firebaseConfig = { apiKey: "AIzaSyDY2S9ntLM_PsWiTqsWuTtPXZuZhUGJ7nI", authDomain: "quanlyxe-888d3.firebaseapp.com", databaseURL: "https://quanlyxe-888d3-default-rtdb.firebaseio.com", projectId: "quanlyxe-888d3", storageBucket: "quanlyxe-888d3.firebasestorage.app", appId: "1:862677142675:web:552a2f8636ff77b3ea1166" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database(), auth = firebase.auth();
 
-let currentUser = null, isLoginMode = true, cD, cM, cY, tSt = 'none', cloudData = {};
-const BONUS = { grab: 200000, rent: 500000, off: 0, none: 0 }, MAINT_INTERVAL = 15000;
+let currentUser = null, cD, cM, cY, tSt = 'none', cloudData = {}, isLogin = true;
+const BONUS = { grab: 200000, rent: 500000, off: 0, none: 0 };
+const VF5_BAT = 37.23, ELEC_PRICE = 3858, MAINT_STEP = 15000;
 
 function initDate() { const n = new Date(); cD = n.getDate(); cM = n.getMonth()+1; cY = n.getFullYear(); }
 
@@ -148,37 +166,87 @@ async function sync() {
     const snap = await db.ref(`users/${currentUser.uid}`).get();
     const all = snap.val() || {};
     cloudData = all.data?.[cY]?.[cM] || {};
-    if(all.car_name) { document.getElementById('header-title').innerText = "XE " + all.car_name; document.getElementById('set-car').value = all.car_name; }
-    calculateMaintenance(all.data);
+    if(all.car_name) { document.getElementById('header-title').innerText = "VF5 PLUS - " + all.car_name; document.getElementById('set-car').value = all.car_name; }
+    updateMaintUI(all.data);
     refresh();
     document.getElementById('loading').style.display = 'none';
 }
 
-function calculateMaintenance(allData) {
+function updateMaintUI(allData) {
     let maxOdo = 0;
     if (allData) {
         Object.values(allData).forEach(y => Object.values(y).forEach(m => Object.values(m).forEach(d => {
-            const o = Math.max(parseInt(d.am?.oe||0), parseInt(d.pm?.oe||0));
-            if(o > maxOdo) maxOdo = o;
+            maxOdo = Math.max(maxOdo, parseInt(d.am?.oe||0), parseInt(d.pm?.oe||0));
         })));
     }
-    const next = Math.ceil((maxOdo + 1) / MAINT_INTERVAL) * MAINT_INTERVAL;
+    const next = Math.ceil((maxOdo + 1) / MAINT_STEP) * MAINT_STEP;
     const rem = next - maxOdo;
-    document.getElementById('maint-odo-curr').innerText = maxOdo.toLocaleString() + " km";
-    document.getElementById('maint-remain').innerText = rem.toLocaleString() + " km";
-    document.getElementById('maint-bar').style.width = ((MAINT_INTERVAL - (rem % MAINT_INTERVAL)) / MAINT_INTERVAL * 100) + "%";
+    document.getElementById('maint-odo').innerText = maxOdo.toLocaleString() + " km";
+    document.getElementById('maint-rem').innerText = rem.toLocaleString() + " km";
+    document.getElementById('maint-bar').style.width = ((MAINT_STEP - (rem % MAINT_STEP)) / MAINT_STEP * 100) + "%";
 }
 
+function liveDay() {
+    ['grab','rent','off'].forEach(s => {
+        const b = document.getElementById(`btn-${s}`);
+        b.style.background = (tSt === s) ? (s==='grab'?'var(--success)':s==='rent'?'var(--primary)':'var(--danger)') : '#eee';
+        b.style.color = (tSt === s) ? '#fff' : '#000';
+    });
+    
+    const getV = id => parseInt(document.getElementById(id).value || 0);
+    const amK = Math.max(0, getV('am-oe')-getV('am-os')), pmK = Math.max(0, getV('pm-oe')-getV('pm-os'));
+    const amP = Math.max(0, getV('am-be')-getV('am-bs')), pmP = Math.max(0, getV('pm-be')-getV('pm-bs'));
+    
+    const amE = amK > 0 ? Math.round(((amP * VF5_BAT) / 100 * 1000) / amK) : 0;
+    const pmE = pmK > 0 ? Math.round(((pmP * VF5_BAT) / 100 * 1000) / pmK) : 0;
+    document.getElementById('eff-am').innerText = amE > 0 ? `| ${amE} Wh/km` : '';
+    document.getElementById('eff-pm').innerText = pmE > 0 ? `| ${pmE} Wh/km` : '';
+    
+    const totalP = amP + pmP;
+    const eCost = Math.round((totalP * VF5_BAT) / 100 * ELEC_PRICE);
+    const net = parseNum(document.getElementById('in-inc').value) + BONUS[tSt] - parseNum(document.getElementById('in-etc').value) - parseNum(document.getElementById('in-exp').value) - eCost;
+
+    document.getElementById('d-summary').innerText = `${amK + pmK} km / ${totalP}% Pin`;
+    document.getElementById('d-elec').innerText = eCost.toLocaleString() + " đ";
+    document.getElementById('d-profit').innerText = net.toLocaleString() + " đ";
+}
+
+function renderCalendar() {
+    const days = new Date(cY, cM, 0).getDate();
+    let sI = 0, sE = 0, sEtc = 0, sB = 0, sK = 0, sP = 0, h = '';
+    ["CN","T2","T3","T4","T5","T6","T7"].forEach(x => h += `<div style="font-size:10px;text-align:center;color:#999">${x}</div>`);
+    for(let i=0; i<new Date(cY, cM-1, 1).getDay(); i++) h += '<div></div>';
+    
+    for(let i=1; i<=days; i++) {
+        const v = cloudData[i] || {}; 
+        const dK = Math.max(0,(v.am?.oe||0)-(v.am?.os||0)) + Math.max(0,(v.pm?.oe||0)-(v.pm?.os||0));
+        const dP = Math.max(0,(v.am?.be||0)-(v.am?.bs||0)) + Math.max(0,(v.pm?.be||0)-(v.pm?.bs||0));
+        const dEl = Math.round((dP * VF5_BAT) / 100 * ELEC_PRICE);
+        const b = BONUS[v.status] || 0;
+        const profit = (v.income||0) + b - (v.etc||0) - (v.expense||0) - dEl;
+        
+        sI += (v.income||0); sB += b; sEtc += (v.etc||0); sE += (v.expense||0); sK += dK; sP += dP;
+        h += `<div class="day-box ${i==new Date().getDate()&&cM==new Date().getMonth()+1?'today':''}" onclick="goDate(${i})"><b>${i}</b><br><span style="color:var(--primary); font-size:9px">${profit>0?Math.floor(profit/1000)+'k':''}</span></div>`;
+    }
+    
+    const totalEl = Math.round((sP * VF5_BAT) / 100 * ELEC_PRICE);
+    document.getElementById('calendarGrid').innerHTML = h;
+    document.getElementById('m-inc').innerText = (sI + sB).toLocaleString() + " đ";
+    document.getElementById('m-etc').innerText = sEtc.toLocaleString() + " đ";
+    document.getElementById('m-elec').innerText = totalEl.toLocaleString() + " đ";
+    document.getElementById('m-km-eff').innerText = `${sK.toLocaleString()} km / ${sK > 0 ? Math.round(((sP * VF5_BAT) / 100 * 1000) / sK) : 0} Wh/km`;
+    document.getElementById('m-total').innerText = (sI + sB - sEtc - sE - totalEl).toLocaleString() + " đ";
+}
+
+// Global Handlers
 function switchTab(t) {
-    const now = new Date();
-    if (t === 'day' && (cD !== now.getDate() || cM !== (now.getMonth()+1) || cY !== now.getFullYear())) initDate();
+    if (t === 'day') initDate();
     ['viewDay','viewMonth','viewUser'].forEach(v => document.getElementById(v).style.display = 'none');
-    ['tabDay','tabMonth','tabUser'].forEach(tb => document.getElementById(tb).className = 'tab-btn');
+    ['tabDay','tabMonth','tabUser'].forEach(tb => document.getElementById(tb).classList.remove('tab-active'));
     document.getElementById('view' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = 'block';
-    document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).className = 'tab-btn tab-active';
+    document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('tab-active');
     sync();
 }
-
 function refresh() {
     document.getElementById('dayLabel').innerText = `Ngày ${cD}/${cM}/${cY}`;
     document.getElementById('calMonthTitle').innerText = `Tháng ${cM} / ${cY}`;
@@ -188,26 +256,11 @@ function refresh() {
         document.getElementById('in-etc').value = (v.etc||0).toLocaleString();
         document.getElementById('in-exp').value = (v.expense||0).toLocaleString();
         ['am-os','am-oe','am-bs','am-be','pm-os','pm-oe','pm-bs','pm-be'].forEach(k => {
-            const [p, f] = k.split('-');
-            document.getElementById(k).value = v[p]?.[f] || '';
+            const [p, f] = k.split('-'); document.getElementById(k).value = v[p]?.[f] || '';
         });
-        tSt = v.status || 'none';
-        liveDay();
+        tSt = v.status || 'none'; liveDay();
     } else if(document.getElementById('viewMonth').style.display === 'block') renderCalendar();
 }
-
-function liveDay() {
-    ['grab','rent','off'].forEach(s => {
-        const b = document.getElementById(`btn-${s}`);
-        b.style.background = (tSt === s) ? (s==='grab'?'var(--success)':s==='rent'?'var(--primary)':'var(--danger)') : '#eee';
-        b.style.color = (tSt === s) ? '#fff' : '#000';
-    });
-    const getV = id => parseInt(document.getElementById(id).value || 0);
-    const totalK = Math.max(0, getV('am-oe')-getV('am-os')) + Math.max(0, getV('pm-oe')-getV('pm-os'));
-    document.getElementById('d-km').innerText = totalK + " km";
-    document.getElementById('d-profit').innerText = (parseNum(document.getElementById('in-inc').value) + BONUS[tSt] - parseNum(document.getElementById('in-etc').value) - parseNum(document.getElementById('in-exp').value)).toLocaleString() + " đ";
-}
-
 async function saveDay() {
     const data = {
         income: parseNum(document.getElementById('in-inc').value),
@@ -220,40 +273,18 @@ async function saveDay() {
     await db.ref(`users/${currentUser.uid}/data/${cY}/${cM}/${cD}`).set(data);
     alert("Đã lưu!"); switchTab('month');
 }
-
-function renderCalendar() {
-    const daysInM = new Date(cY, cM, 0).getDate();
-    let sI = 0, sEtc = 0, sE = 0, sB = 0, sK = 0, h = '';
-    ["CN","T2","T3","T4","T5","T6","T7"].forEach(x => h += `<div style="font-size:10px;text-align:center;color:#999">${x}</div>`);
-    for(let i=0; i<new Date(cY, cM-1, 1).getDay(); i++) h += '<div></div>';
-    for(let i=1; i<=daysInM; i++) {
-        const v = cloudData[i] || {}; const b = BONUS[v.status] || 0;
-        sI += (v.income||0); sEtc += (v.etc||0); sE += (v.expense||0); sB += b;
-        sK += (Math.max(0, (v.am?.oe||0)-(v.am?.os||0)) + Math.max(0, (v.pm?.oe||0)-(v.pm?.os||0)));
-        h += `<div class="day-box ${i==new Date().getDate()&&cM==new Date().getMonth()+1?'today':''}" onclick="goDate(${i})"><b>${i}</b><br><span style="color:var(--primary); font-size:9px">${(v.income+b-(v.etc||0)-(v.expense||0))>0?Math.floor((v.income+b-v.etc-v.expense)/1000)+'k':''}</span></div>`;
-    }
-    document.getElementById('calendarGrid').innerHTML = h;
-    document.getElementById('m-inc').innerText = sI.toLocaleString() + " đ";
-    document.getElementById('m-bon').innerText = sB.toLocaleString() + " đ";
-    document.getElementById('m-etc').innerText = sEtc.toLocaleString() + " đ";
-    document.getElementById('m-exp').innerText = sE.toLocaleString() + " đ";
-    document.getElementById('m-km').innerText = sK.toLocaleString() + " km";
-    document.getElementById('m-total').innerText = (sI + sB - sEtc - sE).toLocaleString() + " đ";
-}
-
-function goDate(d) { cD = d; switchTab('day'); }
+function goDate(d) { cD = d; refresh(); document.getElementById('viewMonth').style.display='none'; document.getElementById('viewDay').style.display='block'; }
 function changeM(s) { let d = new Date(cY, cM - 1 + s, 1); cM = d.getMonth()+1; cY = d.getFullYear(); sync(); }
 function parseNum(v) { return parseInt(v.toString().replace(/\D/g,'') || 0); }
 function formatInp(el) { el.value = parseNum(el.value).toLocaleString(); }
 function setSt(s) { tSt = (tSt === s) ? 'none' : s; liveDay(); }
 async function handleAuth() {
     const e = document.getElementById('auth-email').value, p = document.getElementById('auth-pass').value;
-    try { isLoginMode ? await auth.signInWithEmailAndPassword(e, p) : await auth.createUserWithEmailAndPassword(e, p); } catch(err) { alert(err.message); }
+    try { isLogin ? await auth.signInWithEmailAndPassword(e, p) : await auth.createUserWithEmailAndPassword(e, p); } catch(err) { alert(err.message); }
 }
-function toggleAuthMode() { isLoginMode = !isLoginMode; document.getElementById('auth-title').innerText = isLoginMode ? "Đăng Nhập" : "Đăng Ký"; document.getElementById('btn-auth-text').innerText = isLoginMode ? "ĐĂNG NHẬP" : "ĐĂNG KÝ"; }
+function toggleAuthMode() { isLogin = !isLogin; document.getElementById('auth-title').innerText = isLogin ? "Đăng Nhập" : "Đăng Ký"; document.getElementById('btn-auth-text').innerText = isLogin ? "ĐĂNG NHẬP" : "ĐĂNG KÝ"; }
 async function saveCar() { const n = document.getElementById('set-car').value; if(n) await db.ref(`users/${currentUser.uid}/car_name`).set(n.toUpperCase()); sync(); }
-async function checkFineAuto() { const p = document.getElementById('set-car').value.replace(/[-.]/g, '').toUpperCase(); if(!p) return alert("Nhập biển số!"); await navigator.clipboard.writeText(p); alert("Đã copy biển số!"); window.open("https://www.csgt.vn/tra-cuu-phat-nguoi", "_blank"); }
-initDate();
+function checkFine() { const p = document.getElementById('set-car').value.replace(/[-.]/g, '').toUpperCase(); if(!p) return alert("Nhập biển số!"); navigator.clipboard.writeText(p); window.open("https://www.csgt.vn/tra-cuu-phuong-tien-vi-pham.html", "_blank"); }
 </script>
 </body>
 </html>
