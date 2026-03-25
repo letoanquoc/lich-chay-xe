@@ -1,179 +1,200 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Quản Lý Xe Cloud v5.0</title>
-
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-
-<style>
-    :root { --primary: #007aff; --success: #34c759; --danger: #ff3b30; --warning: #ff9500; --etc: #5856d6; --bg: #f2f2f7; }
-    body { font-family: -apple-system, system-ui, sans-serif; margin: 0; background: var(--bg); color: #333; padding-bottom: 30px; }
-    .header { background: #000; color: #fff; text-align: center; padding: 15px; font-size: 18px; font-weight: bold; position: sticky; top: 0; z-index: 1000; }
-    
-    /* Loader */
-    .loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-    .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* Tabs */
-    .tab-bar { display: flex; background: #fff; border-bottom: 1px solid #ddd; padding: 5px; position: sticky; top: 51px; z-index: 999; }
-    .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #666; border-radius: 8px; font-size: 14px; }
-    .tab-active { background: var(--primary); color: #fff !important; }
-
-    /* Nội dung Card */
-    .card { background: #fff; margin: 10px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .label-min { font-size: 11px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; display: block; }
-    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2f2f7; }
-    .row:last-child { border: none; }
-    
-    /* Hồ sơ & Lịch */
-    .doc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
-    .doc-item { background: #f9f9f9; padding: 8px; border-radius: 10px; text-align: center; border: 1px solid #eee; }
-    .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 5px; }
-    .day-box { background: #fff; border-radius: 6px; padding: 4px; text-align: center; min-height: 60px; border: 1px solid #eee; display: flex; flex-direction: column; justify-content: space-between; font-size: 12px; }
-    .today { border: 2px solid var(--primary); background: #f0f7ff; }
-
-    /* Input & Button */
-    input { width: 100%; padding: 12px; margin: 5px 0; font-size: 18px; font-weight: bold; border-radius: 10px; border: 1px solid #ccc; text-align: center; box-sizing: border-box; }
-    .btn-st { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; background: #eee; font-size: 12px; }
-    .btn-save { width: 100%; padding: 16px; background: var(--success); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; margin-top: 15px; }
-    .st-crit { color: var(--danger); font-weight: bold; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Xe Cloud Pro v11.0</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+    <style>
+        :root { --primary: #007aff; --success: #34c759; --danger: #ff3b30; --warning: #ff9500; --etc: #5856d6; --bg: #f2f2f7; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); color: #333; }
+        .loader { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 25px; background: #fff; box-sizing: border-box; }
+        .auth-input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; box-sizing: border-box; }
+        #app-content { display: none; }
+        .header { background: #000; color: #fff; text-align: center; padding: 15px; font-weight: bold; position: sticky; top: 0; z-index: 1000; }
+        .tab-bar { display: flex; background: #fff; border-bottom: 1px solid #ddd; padding: 5px; position: sticky; top: 48px; z-index: 999; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #888; border-radius: 8px; font-size: 12px; }
+        .tab-active { background: var(--primary); color: #fff !important; }
+        .card { background: #fff; margin: 12px; padding: 15px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .label-min { font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; display: block; }
+        .shift-box { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
+        .shift-box.pm { border-left-color: var(--etc); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input { width: 100%; padding: 10px; border: 1px solid #eee; border-radius: 8px; font-weight: bold; text-align: center; box-sizing: border-box; font-size: 15px; }
+        .btn-st { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; background: #eee; font-size: 11px; }
+        .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
+        .btn-main { width: 100%; padding: 16px; background: var(--success); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; margin-top: 10px; }
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+        .day-box { background: #fff; border-radius: 8px; padding: 8px 2px; text-align: center; border: 1px solid #eee; font-size: 11px; cursor: pointer; min-height: 45px; }
+        .today { border: 2px solid var(--primary); background: #f0f7ff; }
+    </style>
 </head>
 <body>
 
-<div id="loading" class="loader"><div class="spinner"></div><p>Đang đồng bộ...</p></div>
-<div class="header" id="headerTitle">QUẢN LÝ XE CLOUD</div>
+<div id="loading" class="loader"><div class="spinner"></div></div>
 
-<div class="tab-bar">
-    <button id="tabDay" class="tab-btn tab-active" onclick="switchTab('day')">HÔM NAY</button>
-    <button id="tabMonth" class="tab-btn" onclick="switchTab('month')">THÁNG</button>
+<div id="auth-screen">
+    <h2 id="auth-title">Quản Lý Xe Cloud</h2>
+    <input type="email" id="auth-email" class="auth-input" placeholder="Email">
+    <input type="password" id="auth-pass" class="auth-input" placeholder="Mật khẩu">
+    <button class="btn-main" onclick="handleAuth()" id="btn-auth-text" style="background:var(--primary)">ĐĂNG NHẬP</button>
+    <p onclick="toggleAuthMode()" style="font-size:13px; color:var(--primary); margin-top:15px">Chưa có tài khoản? Đăng ký</p>
 </div>
 
-<div id="viewDay" style="display: block;">
-    <div class="card">
-        <h3 id="dayLabel" style="text-align:center; margin: 0 0 15px 0;">Ngày ...</h3>
-        <div style="display:flex; gap:5px; margin-bottom:15px">
-            <button id="btn-grab" class="btn-st" onclick="setSt('grab')">GRAB</button>
-            <button id="btn-rent" class="btn-st" onclick="setSt('rent')">THUÊ</button>
-            <button id="btn-off" class="btn-st" onclick="setSt('off')">NGHỈ</button>
+<div id="app-content">
+    <div class="header" id="header-title">QUẢN LÝ XE</div>
+    <div class="tab-bar">
+        <button id="tabDay" class="tab-btn tab-active" onclick="switchTab('day')">HÀNG NGÀY</button>
+        <button id="tabMonth" class="tab-btn" onclick="switchTab('month')">THỐNG KÊ</button>
+        <button id="tabUser" class="tab-btn" onclick="switchTab('user')">CÁ NHÂN</button>
+    </div>
+
+    <div id="viewDay" class="page">
+        <div class="card">
+            <h3 id="dayLabel" style="text-align:center; margin:0 0 15px 0; font-size:16px;">...</h3>
+            <div style="display:flex; gap:8px; margin-bottom:15px">
+                <button id="btn-grab" class="btn-st" onclick="setSt('grab')">GRAB</button>
+                <button id="btn-rent" class="btn-st" onclick="setSt('rent')">THUÊ</button>
+                <button id="btn-off" class="btn-st" onclick="setSt('off')">NGHỈ</button>
+            </div>
+
+            <div class="shift-box"><span class="label-min" style="color:var(--primary)">Ca Sáng (AM)</span>
+                <div class="grid-2">
+                    <input id="am-os" type="number" placeholder="ODO Đầu" oninput="liveDay()"><input id="am-oe" type="number" placeholder="ODO Cuối" oninput="liveDay()">
+                    <input id="am-bs" type="number" placeholder="% Pin Tr" oninput="liveDay()"><input id="am-be" type="number" placeholder="% Pin S" oninput="liveDay()">
+                </div>
+            </div>
+
+            <div class="shift-box pm"><span class="label-min" style="color:var(--etc)">Ca Chiều (PM)</span>
+                <div class="grid-2">
+                    <input id="pm-os" type="number" placeholder="ODO Đầu" oninput="liveDay()"><input id="pm-oe" type="number" placeholder="ODO Cuối" oninput="liveDay()">
+                    <input id="pm-bs" type="number" placeholder="% Pin Tr" oninput="liveDay()"><input id="pm-be" type="number" placeholder="% Pin S" oninput="liveDay()">
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div><span class="label-min">Tiền khách trả:</span><input id="in-inc" type="tel" oninput="formatInp(this); liveDay();"></div>
+                <div><span class="label-min">Phí ETC:</span><input id="in-etc" type="tel" oninput="formatInp(this); liveDay();" style="color:var(--etc)"></div>
+            </div>
+            <div style="margin-top:10px"><span class="label-min">Chi phí khác (Rửa xe, sạc, ăn...):</span><input id="in-exp" type="tel" oninput="formatInp(this); liveDay();" style="color:var(--danger)"></div>
+            
+            <div class="card" style="margin:15px 0 0 0; background:#f0f7ff; box-shadow:none;">
+                <div class="row"><span>Quãng đường:</span><b id="d-km">0 km</b></div>
+                <div class="row"><span>Lợi nhuận:</span><b id="d-profit" style="color:var(--primary)">0 đ</b></div>
+            </div>
+            <button class="btn-main" onclick="saveDay()">💾 LƯU DỮ LIỆU</button>
         </div>
+    </div>
 
-        <span class="label-min">Tiền khách trả hôm nay:</span>
-        <input id="in-inc" type="tel" oninput="formatInp(this); liveDay();">
-        
-        <span class="label-min">Phí ETC cầu đường đã dùng:</span>
-        <input id="in-etc" type="tel" oninput="formatInp(this); liveDay();" style="color:var(--etc); border-color:var(--etc)">
-
-        <div style="background:#f0f7ff; padding:15px; border-radius:12px; margin-top:15px;">
-            <div class="row"><span>Thưởng thêm:</span><b id="d-bon">0 đ</b></div>
-            <div class="row"><span>ETC đã dùng:</span><b id="d-etc-used" style="color:var(--danger)">0 đ</b></div>
-            <div class="row"><span>Ví ETC còn lại:</span><b id="d-etc-rem" style="color:var(--etc)">0 đ</b></div>
-            <div class="row" style="border-top:2px solid #fff; margin-top:5px; padding-top:10px; color:var(--success); font-size:18px;">
-                <b>TỔNG THU:</b><b id="d-total">0 đ</b>
+    <div id="viewMonth" class="page" style="display:none">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <button onclick="changeM(-1)">←</button><b id="calMonthTitle">Tháng ...</b><button onclick="changeM(1)">→</button>
+            </div>
+            <div id="calendarGrid" class="calendar"></div>
+        </div>
+        <div class="card">
+            <span class="label-min">BÁO CÁO CHI TIẾT THÁNG</span>
+            <div class="row"><span>Tổng thu (Khách):</span><b id="m-inc">0 đ</b></div>
+            <div class="row"><span>Tổng thưởng:</span><b id="m-bon">0 đ</b></div>
+            <div class="row"><span>Tổng phí ETC:</span><b id="m-etc" style="color:var(--etc)">0 đ</b></div>
+            <div class="row"><span>Chi phí khác:</span><b id="m-exp" style="color:var(--danger)">0 đ</b></div>
+            <div class="row"><span>Tổng Km:</span><b id="m-km">0 km</b></div>
+            <div class="row" style="border:none; color:var(--success); font-size:18px; padding-top:10px">
+                <b>LỢI NHUẬN RÒNG:</b><b id="m-total">0 đ</b>
             </div>
         </div>
-        <button class="btn-save" onclick="saveDay()">💾 LƯU LÊN GOOGLE CLOUD</button>
     </div>
-</div>
 
-<div id="viewMonth" style="display: none;">
-    <div class="card">
-        <span class="label-min">Hạn hồ sơ xe:</span>
-        <div class="doc-grid">
-            <div class="doc-item" onclick="setDoc('dk','Đăng kiểm')"><div style="font-size:9px;font-weight:bold;">ĐĂNG KIỂM</div><div id="val-dk" style="font-size:11px;font-weight:800;">-</div></div>
-            <div class="doc-item" onclick="setDoc('tnds','BH TNDS')"><div style="font-size:9px;font-weight:bold;">BH TNDS</div><div id="val-tnds" style="font-size:11px;font-weight:800;">-</div></div>
-            <div class="doc-item" onclick="setDoc('tv','BH Thân vỏ')"><div style="font-size:9px;font-weight:bold;">BH THÂN VỎ</div><div id="val-tv" style="font-size:11px;font-weight:800;">-</div></div>
+    <div id="viewUser" class="page" style="display:none">
+        <div class="card" id="maint-card" style="border-left: 5px solid var(--warning);">
+            <span class="label-min" style="color:var(--warning)">BẢO TRÌ (15,000KM)</span>
+            <div class="row"><span>Hiện tại:</span><b id="maint-odo-curr">0 km</b></div>
+            <div class="row"><span>Còn lại:</span><b id="maint-remain" style="color:var(--danger)">0 km</b></div>
+            <div style="background:#eee; height:8px; border-radius:4px; margin-top:10px;"><div id="maint-bar" style="width:0%; background:var(--warning); height:100%; border-radius:4px;"></div></div>
         </div>
-    </div>
-
-    <div class="card" style="border-left:5px solid var(--etc)">
-        <span class="label-min">Ví ETC:</span>
-        <div class="row"><span>Đã nạp tháng:</span><b id="m-etc-top" style="color:var(--success)">0 đ</b></div>
-        <div class="row"><span>Số dư hiện tại:</span><b id="m-etc-bal" style="color:var(--etc); font-size:18px;">0 đ</b></div>
-        <button onclick="topup()" style="width:100%; margin-top:8px; padding:10px; background:var(--etc); color:#fff; border:none; border-radius:8px; font-weight:bold;">+ NẠP TIỀN</button>
-    </div>
-
-    <div class="card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <button onclick="changeM(-1)" style="border:none; background:none; font-weight:bold; color:var(--primary)">←</button>
-            <b id="calMonthTitle">Tháng ...</b>
-            <button onclick="changeM(1)" style="border:none; background:none; font-weight:bold; color:var(--primary)">→</button>
+        <div class="card">
+            <span class="label-min">Biển số:</span><input id="set-car" type="text" placeholder="30A-XXXXX">
+            <button class="btn-main" onclick="saveCar()" style="background:var(--primary)">CẬP NHẬT</button>
+            <button class="btn-main" onclick="checkFineAuto()" style="background:var(--danger)">TRA PHẠT NGUỘI</button>
         </div>
-        <div id="calendarGrid"></div>
-    </div>
-
-    <div class="card" style="background:#f9f9f9">
-        <span class="label-min">Thống kê Tháng:</span>
-        <div class="row"><span>Doanh thu:</span><b id="m-inc">0 đ</b></div>
-        <div class="row"><span>Thưởng:</span><b id="m-bon">0 đ</b></div>
-        <div class="row" style="color:var(--success); font-size:18px; border-top:1px solid #ddd; padding-top:10px;">
-            <b>TỔNG:</b><b id="m-total">0 đ</b>
-        </div>
-    </div>
-
-    <div class="card" style="border:1px dashed #ccc; background:#eee">
-        <span class="label-min">Công cụ:</span>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <button onclick="exportExcel()" style="padding:10px; background:#1d6f42; color:#fff; border:none; border-radius:5px;">📊 EXCEL</button>
-            <button onclick="backup()" style="padding:10px; border:none; border-radius:5px;">💾 SAO LƯU</button>
-            <button onclick="clearAll()" style="padding:10px; background:var(--danger); color:#fff; border:none; border-radius:5px;">⚠️ XÓA HẾT</button>
-        </div>
+        <button onclick="auth.signOut()" style="margin:20px; width:calc(100% - 40px); background:none; border:1px solid var(--danger); color:var(--danger); padding:12px; border-radius:12px; font-weight:bold">ĐĂNG XUẤT</button>
     </div>
 </div>
 
 <script>
-// --- CẤU HÌNH FIREBASE ---
-const firebaseConfig = {
-  apiKey: "AIzaSyDY2S9ntLM_PsWiTqsWuTtPXZuZhUGJ7nI",
-  authDomain: "quanlyxe-888d3.firebaseapp.com",
-  databaseURL: "https://quanlyxe-888d3-default-rtdb.firebaseio.com", // Đã bổ sung URL database
-  projectId: "quanlyxe-888d3",
-  storageBucket: "quanlyxe-888d3.firebasestorage.app",
-  messagingSenderId: "862677142675",
-  appId: "1:862677142675:web:552a2f8636ff77b3ea1166",
-  measurementId: "G-WCPCQWGB40"
-};
-
+const firebaseConfig = { apiKey: "AIzaSyDY2S9ntLM_PsWiTqsWuTtPXZuZhUGJ7nI", authDomain: "quanlyxe-888d3.firebaseapp.com", databaseURL: "https://quanlyxe-888d3-default-rtdb.firebaseio.com", projectId: "quanlyxe-888d3", storageBucket: "quanlyxe-888d3.firebasestorage.app", appId: "1:862677142675:web:552a2f8636ff77b3ea1166" };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db = firebase.database(), auth = firebase.auth();
 
-const BONUS = { grab: 200000, rent: 500000, off: 0, none: 0 };
-let cD, cM, cY, tSt = 'none', cloudData = {}, etc_bal = 0, docs = {};
+let currentUser = null, isLoginMode = true, cD, cM, cY, tSt = 'none', cloudData = {};
+const BONUS = { grab: 200000, rent: 500000, off: 0, none: 0 }, MAINT_INTERVAL = 15000;
 
-// --- XỬ LÝ DỮ LIỆU ---
+function initDate() { const n = new Date(); cD = n.getDate(); cM = n.getMonth()+1; cY = n.getFullYear(); }
+
+auth.onAuthStateChanged(user => {
+    if (user) { currentUser = user; document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app-content').style.display = 'block'; initDate(); sync(); }
+    else { document.getElementById('auth-screen').style.display = 'flex'; document.getElementById('app-content').style.display = 'none'; }
+});
+
 async function sync() {
+    if(!currentUser) return;
     document.getElementById('loading').style.display = 'flex';
-    try {
-        const snap = await db.ref().get();
-        const all = snap.val() || {};
-        cloudData = all.data?.[cY]?.[cM] || {};
-        etc_bal = all.etc_balance || 0;
-        docs = all.docs || {};
-        refresh();
-    } catch(e) { alert("Lỗi kết nối Server!"); }
+    const snap = await db.ref(`users/${currentUser.uid}`).get();
+    const all = snap.val() || {};
+    cloudData = all.data?.[cY]?.[cM] || {};
+    if(all.car_name) { document.getElementById('header-title').innerText = "XE " + all.car_name; document.getElementById('set-car').value = all.car_name; }
+    calculateMaintenance(all.data);
+    refresh();
     document.getElementById('loading').style.display = 'none';
 }
 
-function formatMoney(v) { return Number(v || 0).toLocaleString("vi-VN") + " đ"; }
-function parseNum(v) { return parseInt(v.toString().replace(/\D/g,'') || 0); }
-function formatInp(el) { el.value = parseNum(el.value).toLocaleString(); }
+function calculateMaintenance(allData) {
+    let maxOdo = 0;
+    if (allData) {
+        Object.values(allData).forEach(y => Object.values(y).forEach(m => Object.values(m).forEach(d => {
+            const o = Math.max(parseInt(d.am?.oe||0), parseInt(d.pm?.oe||0));
+            if(o > maxOdo) maxOdo = o;
+        })));
+    }
+    const next = Math.ceil((maxOdo + 1) / MAINT_INTERVAL) * MAINT_INTERVAL;
+    const rem = next - maxOdo;
+    document.getElementById('maint-odo-curr').innerText = maxOdo.toLocaleString() + " km";
+    document.getElementById('maint-remain').innerText = rem.toLocaleString() + " km";
+    document.getElementById('maint-bar').style.width = ((MAINT_INTERVAL - (rem % MAINT_INTERVAL)) / MAINT_INTERVAL * 100) + "%";
+}
 
 function switchTab(t) {
-    document.getElementById('viewDay').style.display = (t === 'day') ? 'block' : 'none';
-    document.getElementById('viewMonth').style.display = (t === 'month') ? 'block' : 'none';
-    document.getElementById('tabDay').className = 'tab-btn' + (t === 'day' ? ' tab-active' : '');
-    document.getElementById('tabMonth').className = 'tab-btn' + (t === 'month' ? ' tab-active' : '');
+    const now = new Date();
+    if (t === 'day' && (cD !== now.getDate() || cM !== (now.getMonth()+1) || cY !== now.getFullYear())) initDate();
+    ['viewDay','viewMonth','viewUser'].forEach(v => document.getElementById(v).style.display = 'none');
+    ['tabDay','tabMonth','tabUser'].forEach(tb => document.getElementById(tb).className = 'tab-btn');
+    document.getElementById('view' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = 'block';
+    document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).className = 'tab-btn tab-active';
     sync();
 }
 
-// --- NGÀY ---
-function openDay(d) { cD = d; sync(); }
-function setSt(s) { tSt = (tSt === s) ? 'none' : s; liveDay(); }
+function refresh() {
+    document.getElementById('dayLabel').innerText = `Ngày ${cD}/${cM}/${cY}`;
+    document.getElementById('calMonthTitle').innerText = `Tháng ${cM} / ${cY}`;
+    if(document.getElementById('viewDay').style.display === 'block') {
+        const v = cloudData[cD] || {};
+        document.getElementById('in-inc').value = (v.income||0).toLocaleString();
+        document.getElementById('in-etc').value = (v.etc||0).toLocaleString();
+        document.getElementById('in-exp').value = (v.expense||0).toLocaleString();
+        ['am-os','am-oe','am-bs','am-be','pm-os','pm-oe','pm-bs','pm-be'].forEach(k => {
+            const [p, f] = k.split('-');
+            document.getElementById(k).value = v[p]?.[f] || '';
+        });
+        tSt = v.status || 'none';
+        liveDay();
+    } else if(document.getElementById('viewMonth').style.display === 'block') renderCalendar();
+}
 
 function liveDay() {
     ['grab','rent','off'].forEach(s => {
@@ -181,126 +202,58 @@ function liveDay() {
         b.style.background = (tSt === s) ? (s==='grab'?'var(--success)':s==='rent'?'var(--primary)':'var(--danger)') : '#eee';
         b.style.color = (tSt === s) ? '#fff' : '#000';
     });
-    const inc = parseNum(document.getElementById('in-inc').value);
-    const etc = parseNum(document.getElementById('in-etc').value);
-    const bon = BONUS[tSt] || 0;
-    document.getElementById('d-bon').innerText = formatMoney(bon);
-    document.getElementById('d-etc-used').innerText = formatMoney(etc);
-    document.getElementById('d-total').innerText = formatMoney(inc + bon);
-    
-    const oldE = cloudData[cD]?.etc || 0;
-    const tempBal = etc_bal - (etc - oldE);
-    document.getElementById('d-etc-rem').innerText = formatMoney(tempBal);
-    document.getElementById('d-etc-rem').className = tempBal < 50000 ? "st-crit" : "";
+    const getV = id => parseInt(document.getElementById(id).value || 0);
+    const totalK = Math.max(0, getV('am-oe')-getV('am-os')) + Math.max(0, getV('pm-oe')-getV('pm-os'));
+    document.getElementById('d-km').innerText = totalK + " km";
+    document.getElementById('d-profit').innerText = (parseNum(document.getElementById('in-inc').value) + BONUS[tSt] - parseNum(document.getElementById('in-etc').value) - parseNum(document.getElementById('in-exp').value)).toLocaleString() + " đ";
 }
 
 async function saveDay() {
-    const inc = parseNum(document.getElementById('in-inc').value);
-    const etc = parseNum(document.getElementById('in-etc').value);
-    const oldE = cloudData[cD]?.etc || 0;
-    
-    document.getElementById('loading').style.display = 'flex';
-    const updates = {};
-    updates[`data/${cY}/${cM}/${cD}`] = { income: inc, etc: etc, status: tSt };
-    updates[`etc_balance`] = etc_bal - (etc - oldE);
-    
-    await db.ref().update(updates);
-    alert("Đã đồng bộ thành công!");
-    switchTab('month');
-}
-
-// --- THÁNG ---
-function refresh() {
-    document.getElementById('dayLabel').innerText = `Ngày ${cD}/${cM}/${cY}`;
-    document.getElementById('calMonthTitle').innerText = `Tháng ${cM}/${cY}`;
-    
-    if(document.getElementById('viewDay').style.display === 'block') {
-        const v = cloudData[cD] || { income: 0, etc: 0, status: 'none' };
-        document.getElementById('in-inc').value = v.income.toLocaleString();
-        document.getElementById('in-etc').value = v.etc.toLocaleString();
-        tSt = v.status;
-        liveDay();
-    } else {
-        renderDocs();
-        renderCalendar();
-    }
-}
-
-function renderDocs() {
-    ['dk','tnds','tv'].forEach(k => {
-        const s = docs[k];
-        const el = document.getElementById(`val-${k}`);
-        if(!s) { el.innerText = "Trống"; return; }
-        const days = Math.ceil((new Date(s) - new Date()) / 86400000);
-        el.innerText = days + " ngày";
-        el.style.color = days < 7 ? 'var(--danger)' : (days < 30 ? 'var(--warning)' : 'var(--success)');
-    });
-    document.getElementById('m-etc-bal').innerText = formatMoney(etc_bal);
+    const data = {
+        income: parseNum(document.getElementById('in-inc').value),
+        etc: parseNum(document.getElementById('in-etc').value),
+        expense: parseNum(document.getElementById('in-exp').value),
+        status: tSt,
+        am: { os: document.getElementById('am-os').value, oe: document.getElementById('am-oe').value, bs: document.getElementById('am-bs').value, be: document.getElementById('am-be').value },
+        pm: { os: document.getElementById('pm-os').value, oe: document.getElementById('pm-oe').value, bs: document.getElementById('pm-bs').value, be: document.getElementById('pm-be').value }
+    };
+    await db.ref(`users/${currentUser.uid}/data/${cY}/${cM}/${cD}`).set(data);
+    alert("Đã lưu!"); switchTab('month');
 }
 
 function renderCalendar() {
     const daysInM = new Date(cY, cM, 0).getDate();
-    const startIdx = new Date(cY, cM-1, 1).getDay();
-    let sI = 0, sB = 0;
-    
-    let h = '<div class="calendar">';
+    let sI = 0, sEtc = 0, sE = 0, sB = 0, sK = 0, h = '';
     ["CN","T2","T3","T4","T5","T6","T7"].forEach(x => h += `<div style="font-size:10px;text-align:center;color:#999">${x}</div>`);
-    for(let i=0; i<startIdx; i++) h += '<div></div>';
+    for(let i=0; i<new Date(cY, cM-1, 1).getDay(); i++) h += '<div></div>';
     for(let i=1; i<=daysInM; i++) {
-        const v = cloudData[i] || {income:0, status:'none', etc:0};
-        const b = BONUS[v.status] || 0;
-        sI += v.income; sB += b;
-        let col = v.status==='grab'?'var(--success)':(v.status==='rent'?'var(--primary)':'#ccc');
-        h += `<div class="day-box ${i==new Date().getDate()&&cM==new Date().getMonth()+1?'today':''}" onclick="cD=${i}; switchTab('day');">
-            <b>${i}</b>
-            <span style="color:${col}; font-size:8px; font-weight:bold">${v.status.toUpperCase()}</span>
-            <b style="font-size:9px">${(v.income+b)>0?Math.floor((v.income+b)/1000)+'k':''}</b>
-        </div>`;
+        const v = cloudData[i] || {}; const b = BONUS[v.status] || 0;
+        sI += (v.income||0); sEtc += (v.etc||0); sE += (v.expense||0); sB += b;
+        sK += (Math.max(0, (v.am?.oe||0)-(v.am?.os||0)) + Math.max(0, (v.pm?.oe||0)-(v.pm?.os||0)));
+        h += `<div class="day-box ${i==new Date().getDate()&&cM==new Date().getMonth()+1?'today':''}" onclick="goDate(${i})"><b>${i}</b><br><span style="color:var(--primary); font-size:9px">${(v.income+b-(v.etc||0)-(v.expense||0))>0?Math.floor((v.income+b-v.etc-v.expense)/1000)+'k':''}</span></div>`;
     }
-    document.getElementById('calendarGrid').innerHTML = h + '</div>';
-    document.getElementById('m-inc').innerText = formatMoney(sI);
-    document.getElementById('m-bon').innerText = formatMoney(sB);
-    document.getElementById('m-total').innerText = formatMoney(sI + sB);
+    document.getElementById('calendarGrid').innerHTML = h;
+    document.getElementById('m-inc').innerText = sI.toLocaleString() + " đ";
+    document.getElementById('m-bon').innerText = sB.toLocaleString() + " đ";
+    document.getElementById('m-etc').innerText = sEtc.toLocaleString() + " đ";
+    document.getElementById('m-exp').innerText = sE.toLocaleString() + " đ";
+    document.getElementById('m-km').innerText = sK.toLocaleString() + " km";
+    document.getElementById('m-total').innerText = (sI + sB - sEtc - sE).toLocaleString() + " đ";
 }
 
-// --- TOOLS ---
-async function topup() {
-    const a = prompt("Số tiền nạp ETC:");
-    if(a) {
-        const val = parseNum(a);
-        await db.ref('etc_balance').set(etc_bal + val);
-        sync();
-    }
-}
-
-async function setDoc(k, n) {
-    const d = prompt(`Hạn ${n} (Ngày/Tháng/Năm):`, "31/12/2026");
-    if(d) {
-        const p = d.split('/');
-        const iso = new Date(p[2], p[1]-1, p[0]).toISOString();
-        await db.ref(`docs/${k}`).set(iso);
-        sync();
-    }
-}
-
+function goDate(d) { cD = d; switchTab('day'); }
 function changeM(s) { let d = new Date(cY, cM - 1 + s, 1); cM = d.getMonth()+1; cY = d.getFullYear(); sync(); }
-function backup() { const b = new Blob([JSON.stringify(cloudData)], {type:"application/json"}); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `Backup_Xe.json`; a.click(); }
-async function clearAll() { if(confirm("Xóa toàn bộ dữ liệu trên Server?")) { await db.ref().remove(); location.reload(); } }
-
-function exportExcel() {
-    let rows = [];
-    for(let i=1; i<=31; i++) {
-        const v = cloudData[i]; if(!v) continue;
-        rows.push({"Ngày":i, "Trạng thái":v.status, "Thu nhập":v.income, "Thưởng":BONUS[v.status], "ETC":v.etc});
-    }
-    const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Báo cáo");
-    XLSX.writeFile(wb, `Xe_Cloud_${cM}_${cY}.xlsx`);
+function parseNum(v) { return parseInt(v.toString().replace(/\D/g,'') || 0); }
+function formatInp(el) { el.value = parseNum(el.value).toLocaleString(); }
+function setSt(s) { tSt = (tSt === s) ? 'none' : s; liveDay(); }
+async function handleAuth() {
+    const e = document.getElementById('auth-email').value, p = document.getElementById('auth-pass').value;
+    try { isLoginMode ? await auth.signInWithEmailAndPassword(e, p) : await auth.createUserWithEmailAndPassword(e, p); } catch(err) { alert(err.message); }
 }
-
-// Khởi tạo
-const now = new Date(); cD = now.getDate(); cM = now.getMonth()+1; cY = now.getFullYear();
-sync();
+function toggleAuthMode() { isLoginMode = !isLoginMode; document.getElementById('auth-title').innerText = isLoginMode ? "Đăng Nhập" : "Đăng Ký"; document.getElementById('btn-auth-text').innerText = isLoginMode ? "ĐĂNG NHẬP" : "ĐĂNG KÝ"; }
+async function saveCar() { const n = document.getElementById('set-car').value; if(n) await db.ref(`users/${currentUser.uid}/car_name`).set(n.toUpperCase()); sync(); }
+async function checkFineAuto() { const p = document.getElementById('set-car').value.replace(/[-.]/g, '').toUpperCase(); if(!p) return alert("Nhập biển số!"); await navigator.clipboard.writeText(p); alert("Đã copy biển số!"); window.open("https://www.csgt.vn/tra-cuu-phat-nguoi", "_blank"); }
+initDate();
 </script>
 </body>
 </html>
