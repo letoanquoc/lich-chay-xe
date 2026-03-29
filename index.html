@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VF5 Pro v34.0 - Smart Maintenance</title>
+    <title>VF5 Pro v34.5 - Auto ODO Tracker</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -28,13 +28,14 @@
         .today { border: 2px solid var(--primary) !important; background: #eef7ff !important; }
         .has-data { background: #eaffea !important; border: 1px solid var(--success) !important; }
         marquee { background: var(--danger); color: #fff; font-size: 12px; padding: 5px; display: block; font-weight: bold; }
+        .maint-status { padding: 10px; border-radius: 12px; text-align: center; margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="app-content">
     <div id="header-alert"></div>
-    <div class="header"> VINFAST VF5 PLUS 50E-268.18</div>
+    <div class="header">Vinfast VF5 Plus 50E-268.18</div>
     
     <div class="tab-bar">
         <button id="tabDay" class="tab-btn tab-active" onclick="switchTab('day')">VẬN HÀNH</button>
@@ -87,7 +88,7 @@
 
             <div class="card" style="margin:15px 0 0 0; background:#f0f7ff; box-shadow:none; padding:10px">
                 <div class="row"><span>Tổng Pin đã sạc:</span><b id="res-u">0 %</b></div>
-                <div class="row"><span>Tiền điện dự tính:</span><b id="res-elec">MIỄN PHÍ</b></div>
+                <div class="row"><span>Tiền điện dự tính:</span><b id="res-elec" style="color:var(--success)">MIỄN PHÍ</b></div>
                 <div class="row" style="border:none"><b>LỢI NHUẬN RÒNG:</b><b id="res-profit" style="color:var(--primary); font-size:16px">0 đ</b></div>
             </div>
             <button class="btn-main" onclick="saveData()">💾 LƯU DỮ LIỆU & CẬP NHẬT VÍ</button>
@@ -121,19 +122,28 @@
             <button class="btn-main" onclick="topupETC()" style="background:var(--etc); margin-bottom:10px">➕ NẠP TIỀN VÀO VÍ</button>
             <div class="row"><span>Số dư ví hiện tại:</span><b id="user-etc-bal">0 đ</b></div>
         </div>
+        
         <div class="card">
-            <span class="label-min">HỒ SƠ & BẢO DƯỠNG</span>
-            <div class="row"><span>Biển số:</span><input id="car-plate" onchange="saveInfo()" style="width:120px; border:none; text-align:right"></div>
-            <div class="row"><span>Đăng kiểm:</span><input id="car-reg" type="month" onchange="saveInfo()" style="width:140px"></div>
-            <div class="row"><span>Bảo hiểm:</span><input id="car-ins" type="date" onchange="saveInfo()" style="width:140px"></div>
-            
-            <div style="background: #fdf2f2; padding: 10px; border-radius: 12px; margin-top: 10px;">
-                <div class="row" style="border:none"><span>Mốc bảo dưỡng tới:</span><b id="display-maint-next">---</b></div>
-                <button class="btn-main" onclick="completeMaint()" style="background:var(--primary); font-size:12px; padding:10px">✅ XÁC NHẬN ĐÃ BẢO DƯỠNG XONG</button>
-                <div class="row" style="border:none; font-size:10px; color:#888"><span>Lần cuối:</span><span id="display-maint-last">Chưa rõ</span></div>
+            <span class="label-min">HỆ THỐNG BẢO DƯỠNG (Mỗi 15.000km)</span>
+            <div id="maint-status-card" class="maint-status">
+                <div style="font-size:11px">ODO Hiện tại: <span id="odo-now-display">0</span> km</div>
+                <div style="font-size:18px; margin:5px 0">Còn <span id="maint-km-left">---</span> km</div>
+                <div style="font-size:11px">Mốc bảo dưỡng kế tiếp: <b id="display-maint-next">---</b></div>
             </div>
             
-            <div class="row" style="margin-top:10px"><span>Sửa mốc bằng tay (Km):</span><input id="car-maint" type="number" onchange="saveInfo()" placeholder="15000" style="width:100px; border:none; text-align:right"></div>
+            <button class="btn-main" onclick="completeMaint()" style="background:var(--primary); font-size:12px; padding:12px">✅ XÁC NHẬN VỪA BẢO DƯỠNG XONG</button>
+            
+            <div class="row" style="border:none; font-size:10px; color:#888; margin-top:5px">
+                <span>Nhật ký lần cuối:</span><span id="display-maint-last">Chưa rõ</span>
+            </div>
+
+            <div style="border-top:1px solid #eee; margin-top:15px; padding-top:10px">
+                <span class="label-min">THÔNG TIN XE</span>
+                <div class="row"><span>Biển số:</span><input id="car-plate" onchange="saveInfo()" style="width:120px; border:none; text-align:right"></div>
+                <div class="row"><span>Đăng kiểm:</span><input id="car-reg" type="month" onchange="saveInfo()" style="width:140px"></div>
+                <div class="row"><span>Bảo hiểm:</span><input id="car-ins" type="date" onchange="saveInfo()" style="width:140px"></div>
+                <div class="row"><span>Sửa mốc (Km):</span><input id="car-maint" type="number" onchange="saveInfo()" style="width:100px; border:none; text-align:right"></div>
+            </div>
         </div>
         <button class="btn-main" style="background:#888" onclick="auth.signOut()">ĐĂNG XUẤT</button>
     </div>
@@ -163,6 +173,12 @@ async function sync() {
     fullData = val.data || {};
     currentEtcBal = val.info?.etc_bal || 0;
 
+    // Tìm ODO cao nhất từ dữ liệu lịch sử
+    latestMaxOdo = 0;
+    Object.values(fullData).forEach(y => Object.values(y).forEach(m => Object.values(m).forEach(day => {
+        latestMaxOdo = Math.max(latestMaxOdo, day.am?.oe||0, day.pm?.oe||0);
+    })));
+
     updateETCUI(currentEtcBal);
     if(val.info) {
         document.getElementById('car-plate').value = val.info.plate || '';
@@ -170,15 +186,24 @@ async function sync() {
         document.getElementById('car-ins').value = val.info.ins || '';
         document.getElementById('car-maint').value = val.info.maint || 15000;
         document.getElementById('display-maint-next').innerText = (val.info.maint || 15000).toLocaleString() + " km";
-        document.getElementById('display-maint-last').innerText = val.info.last_maint ? val.info.last_maint : "Chưa có dữ liệu";
+        document.getElementById('display-maint-last').innerText = val.info.last_maint || "Chưa có";
+        document.getElementById('odo-now-display').innerText = latestMaxOdo.toLocaleString();
         
-        latestMaxOdo = 0;
-        Object.values(fullData).forEach(y => Object.values(y).forEach(m => Object.values(m).forEach(day => {
-            latestMaxOdo = Math.max(latestMaxOdo, day.am?.oe||0, day.pm?.oe||0);
-        })));
         checkAlerts(val.info, latestMaxOdo);
+        updateMaintUI(val.info.maint || 15000, latestMaxOdo);
     }
     fillFormByDate();
+}
+
+function updateMaintUI(target, current) {
+    const left = target - current;
+    const card = document.getElementById('maint-status-card');
+    const txt = document.getElementById('maint-km-left');
+    txt.innerText = left.toLocaleString();
+    
+    if(left <= 100) { card.style.background = "#fff0f0"; card.style.color = "var(--danger)"; }
+    else if(left <= 500) { card.style.background = "#fff9ee"; card.style.color = "var(--warning)"; }
+    else { card.style.background = "#f2faf4"; card.style.color = "var(--success)"; }
 }
 
 function fillFormByDate() {
@@ -186,20 +211,17 @@ function fillFormByDate() {
     let lastOdoEver = 0;
     Object.keys(fullData).forEach(y => Object.keys(fullData[y]).forEach(m => Object.entries(fullData[y][m]).forEach(([day, data]) => {
         const dateVer = new Date(y, m-1, day);
-        const currentVer = new Date(cY, cM-1, cD);
-        if(dateVer < currentVer) lastOdoEver = Math.max(lastOdoEver, data.am?.oe||0, data.pm?.oe||0);
+        if(dateVer < new Date(cY, cM-1, cD)) lastOdoEver = Math.max(lastOdoEver, data.am?.oe||0, data.pm?.oe||0);
     })));
 
     document.getElementById('am-os').value = d.am?.os || (lastOdoEver > 0 ? lastOdoEver : '');
     document.getElementById('am-oe').value = d.am?.oe || '';
     document.getElementById('pm-os').value = d.pm?.os || d.am?.oe || '';
     document.getElementById('pm-oe').value = d.pm?.oe || '';
-
     ['am-u1','am-u2','am-u3','pm-u1','pm-u2','pm-u3'].forEach(id => {
         const [shift, field] = id.split('-');
         document.getElementById(id).value = d[shift]?.[field] || '';
     });
-
     document.getElementById('in-inc').value = (d.inc || 0).toLocaleString();
     document.getElementById('in-etc').value = (d.etc || 0).toLocaleString();
     document.getElementById('prev-odo-tip').innerText = lastOdoEver.toLocaleString();
@@ -208,24 +230,20 @@ function fillFormByDate() {
 
 function autoBridge() {
     const amOe = document.getElementById('am-oe').value;
-    const pmOs = document.getElementById('pm-os');
-    pmOs.value = amOe;
+    document.getElementById('pm-os').value = amOe;
     liveCalc();
 }
 
 function liveCalc() {
     const get = id => parseInt(document.getElementById(id).value || 0);
     const uCharged = Math.max(0, get('am-u2') - get('am-u1')) + Math.max(0, get('pm-u2') - get('pm-u1'));
-    const selectedDate = new Date(cY, cM - 1, cD);
-    const isFree = selectedDate <= FREE_UNTIL;
+    const isFree = new Date(cY, cM - 1, cD) <= FREE_UNTIL;
     const elecCost = isFree ? 0 : Math.round(uCharged * BAT / 100 * PRICE);
     const inc = parseNum(document.getElementById('in-inc').value);
     const etc = parseNum(document.getElementById('in-etc').value);
 
     document.getElementById('res-u').innerText = uCharged + " %";
-    const elecDisplay = document.getElementById('res-elec');
-    elecDisplay.innerText = isFree ? "MIỄN PHÍ" : elecCost.toLocaleString() + " đ";
-    elecDisplay.style.color = isFree ? "var(--success)" : "#333";
+    document.getElementById('res-elec').innerText = isFree ? "MIỄN PHÍ" : elecCost.toLocaleString() + " đ";
     document.getElementById('res-profit').innerText = (inc - etc - elecCost).toLocaleString() + " đ";
 }
 
@@ -245,16 +263,10 @@ async function saveData() {
 }
 
 async function completeMaint() {
-    if(!confirm(`Xác nhận bạn đã bảo dưỡng tại mốc ${latestMaxOdo} km? \nApp sẽ tự động nhắc mốc kế tiếp là ${latestMaxOdo + 15000} km.`)) return;
-    
-    const nextMaint = latestMaxOdo + 15000;
-    const lastMaintStr = `${new Date().toLocaleDateString('vi-VN')} tại ${latestMaxOdo} km`;
-    
-    await db.ref(`users/${curU.uid}/info`).update({
-        maint: nextMaint,
-        last_maint: lastMaintStr
-    });
-    alert("Chúc mừng! Xe của bạn đã được bảo dưỡng. Mốc tiếp theo: " + nextMaint + " km");
+    if(!confirm(`Xác nhận đã bảo dưỡng xong?\nMốc kế tiếp sẽ là ${latestMaxOdo + 15000} km.`)) return;
+    const next = latestMaxOdo + 15000;
+    const log = `${new Date().toLocaleDateString('vi-VN')} (${latestMaxOdo} km)`;
+    await db.ref(`users/${curU.uid}/info`).update({ maint: next, last_maint: log });
     sync();
 }
 
@@ -270,8 +282,7 @@ function renderCalendar() {
     for(let i=1; i<=days; i++) {
         const v = (fullData[cY]?.[cM] || {})[i] || {};
         const uC = Math.max(0, (v.am?.u2||0)-(v.am?.u1||0)) + Math.max(0, (v.pm?.u2||0)-(v.pm?.u1||0));
-        const checkDate = new Date(cY, cM - 1, i);
-        const eC = (checkDate <= FREE_UNTIL) ? 0 : Math.round(uC * BAT / 100 * PRICE);
+        const eC = (new Date(cY, cM - 1, i) <= FREE_UNTIL) ? 0 : Math.round(uC * BAT / 100 * PRICE);
         const profit = (v.inc||0) - (v.etc||0) - eC;
         const kmDay = Math.max(0, (v.pm?.oe || v.am?.oe || 0) - (v.am?.os || 0));
         sI += (v.inc||0); sEtc += (v.etc||0); sE += eC; sKm += kmDay; sU += uC;
@@ -288,29 +299,17 @@ function renderCalendar() {
     document.getElementById('m-etc').innerText = sEtc.toLocaleString() + " đ";
     document.getElementById('m-elec').innerText = sE.toLocaleString() + " đ";
     document.getElementById('m-total').innerText = (sI - sEtc - sE).toLocaleString() + " đ";
-    document.getElementById('extra-stats').innerHTML = `
-        <div class="row" style="border-top: 1px dashed #ccc; margin-top:10px"><span>Tổng quãng đường:</span><b>${sKm} km</b></div>
-        <div class="row"><span>Hiệu suất TB:</span><b style="color:var(--etc)">${sU > 0 ? (sKm/sU).toFixed(2) : 0} km/%</b></div>`;
+    document.getElementById('extra-stats').innerHTML = `<div class="row"><span>Tổng Km chạy:</span><b>${sKm} km</b></div>`;
 }
 
 function checkAlerts(info, maxOdo) {
-    const today = new Date();
     let msgs = [];
     if(info.reg) {
-        const exp = new Date(info.reg + "-28");
-        const diff = Math.ceil((exp - today)/86400000);
+        const diff = Math.ceil((new Date(info.reg + "-28") - new Date())/86400000);
         if(diff <= 15) msgs.push(`Đăng kiểm còn ${diff} ngày`);
     }
-    if(info.ins) {
-        const exp = new Date(info.ins);
-        const diff = Math.ceil((exp - today)/86400000);
-        if(diff <= 15) msgs.push(`Bảo hiểm còn ${diff} ngày`);
-    }
-    const maintPoint = info.maint || 15000;
-    const distanceLeft = maintPoint - maxOdo;
-    if(distanceLeft <= 500 && distanceLeft > 0) msgs.push(`Sắp bảo dưỡng (còn ${distanceLeft} km)`);
-    else if(distanceLeft <= 0) msgs.push(`CẢNH BÁO: QUÁ HẠN BẢO DƯỠNG!`);
-
+    const left = (info.maint || 15000) - maxOdo;
+    if(left <= 500) msgs.push(left <= 0 ? `QUÁ HẠN BẢO DƯỠNG!` : `Sắp bảo dưỡng (còn ${left} km)`);
     document.getElementById('header-alert').innerHTML = msgs.length ? `<marquee>⚠️ ${msgs.join(' | ')}</marquee>` : '';
 }
 
@@ -339,7 +338,7 @@ function parseNum(v) { return parseInt(v.toString().replace(/\D/g,'') || 0); }
 function formatInp(el) { el.value = parseNum(el.value).toLocaleString(); }
 function getV(id) { return parseInt(document.getElementById(id).value || 0); }
 async function topupETC() {
-    const a = parseInt(prompt("Nhập số tiền nạp:", "100000") || 0);
+    const a = parseInt(prompt("Số tiền nạp:", "100000") || 0);
     if(a > 0) { await db.ref(`users/${curU.uid}/info/etc_bal`).set(currentEtcBal + a); sync(); }
 }
 async function saveInfo() {
