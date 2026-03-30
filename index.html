@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VF5 Pro v34.5 - Auto ODO Tracker</title>
+    <title>VF5 Pro v40.0 - Full Optimized</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <style>
-        :root { --primary: #007aff; --success: #34c759; --danger: #ff3b30; --warning: #ff9500; --etc: #5856d6; --bg: #f2f2f7; --dark: #1c1c1e; }
+        :root { --primary: #007aff; --success: #34c759; --danger: #ff3b30; --warning: #ff9500; --etc: #5856d6; --rent: #af52de; --bg: #f2f2f7; --dark: #1c1c1e; }
         body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); color: #333; -webkit-tap-highlight-color: transparent; }
         .header { background: #000; color: #fff; text-align: center; padding: 12px; font-weight: bold; position: sticky; top: 0; z-index: 1000; }
         .tab-bar { display: flex; background: #fff; border-bottom: 1px solid #ddd; padding: 5px; position: sticky; top: 44px; z-index: 999; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #888; border-radius: 8px; font-size: 11px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #888; border-radius: 8px; font-size: 11px; transition: 0.2s; }
         .tab-active { background: var(--primary); color: #fff !important; }
         .card { background: #fff; margin: 10px; padding: 15px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .etc-card { background: var(--dark); color: #fff; border-left: 5px solid var(--etc); }
         .label-min { font-size: 9px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; display: block; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -23,19 +22,22 @@
         .btn-main { width: 100%; padding: 16px; background: var(--success); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2f2f7; font-size: 13px; align-items: center; }
         .shift-box { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
+        .status-toggle { display: flex; gap: 5px; margin-bottom: 12px; }
+        .btn-st { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 11px; background: #eee; color: #666; }
+        .st-grab-active { background: var(--success) !important; color: #fff !important; }
+        .st-rent-active { background: var(--rent) !important; color: #fff !important; }
+        .st-off-active { background: var(--danger) !important; color: #fff !important; }
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
-        .day-box { background: #fff; border-radius: 8px; padding: 8px 2px; text-align: center; border: 1px solid #eee; font-size: 11px; min-height: 60px; display: flex; flex-direction: column; justify-content: center; }
+        .day-box { background: #fff; border-radius: 8px; padding: 8px 2px; text-align: center; border: 1px solid #eee; font-size: 10px; min-height: 55px; display: flex; flex-direction: column; justify-content: center; }
         .today { border: 2px solid var(--primary) !important; background: #eef7ff !important; }
-        .has-data { background: #eaffea !important; border: 1px solid var(--success) !important; }
-        marquee { background: var(--danger); color: #fff; font-size: 12px; padding: 5px; display: block; font-weight: bold; }
-        .maint-status { padding: 10px; border-radius: 12px; text-align: center; margin-bottom: 10px; font-weight: bold; }
+        .legal-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .legal-row input { width: 130px; text-align: right; border: none; padding: 5px; color: var(--primary); }
     </style>
 </head>
 <body>
 
 <div id="app-content">
-    <div id="header-alert"></div>
-    <div class="header">Vinfast VF5 Plus 50E-268.18</div>
+    <div class="header">VF5 Plus 50E-268.18</div>
     
     <div class="tab-bar">
         <button id="tabDay" class="tab-btn tab-active" onclick="switchTab('day')">VẬN HÀNH</button>
@@ -44,19 +46,23 @@
     </div>
 
     <div id="viewDay" class="page">
-        <div class="card etc-card">
+        <div class="card" style="background: var(--dark); color:#fff; border-left: 5px solid var(--etc)">
             <div class="row" style="border:none; padding:0">
-                <span style="font-size: 11px; opacity: 0.8;">VÍ ETC HIỆN TẠI</span>
-                <b id="etc-balance-main" style="font-size: 20px; color: var(--success)">0 đ</b>
+                <span style="font-size: 11px; opacity: 0.8;">VÍ ETC:</span>
+                <b id="etc-balance-main" style="font-size: 18px; color: var(--success)">0 đ</b>
             </div>
-            <div id="etc-alert-ui" style="color:var(--danger); font-size:10px; display:none; margin-top:5px; font-weight:bold">⚠️ VÍ DƯỚI 50K - HÃY NẠP THÊM!</div>
         </div>
 
         <div class="card">
-            <h3 id="dayLabel" style="text-align:center; margin:0 0 10px 0; color:var(--primary)">---</h3>
+            <h3 id="dayLabel" style="text-align:center; margin:0 0 10px 0; color:var(--primary)">Đang tải...</h3>
             
             <div class="shift-box">
-                <span class="label-min">CA SÁNG (Gợi ý ODO đầu: <span id="prev-odo-tip" style="color:var(--danger)">0</span>)</span>
+                <span class="label-min">TRẠNG THÁI CA SÁNG (Gợi ý: <span id="prev-odo-tip">0</span>)</span>
+                <div class="status-toggle">
+                    <button id="btn-grab" class="btn-st" onclick="setSt('grab')">GRAB</button>
+                    <button id="btn-rent" class="btn-st" onclick="setSt('rent')">THUÊ</button>
+                    <button id="btn-off" class="btn-st" onclick="setSt('off')">NGHỈ</button>
+                </div>
                 <div class="grid-2" style="margin-bottom:10px">
                     <div><label class="label-min">Đầu ca (ODO)</label><input id="am-os" type="number" oninput="liveCalc()"></div>
                     <div><label class="label-min">Kết ca (ODO)</label><input id="am-oe" type="number" oninput="autoBridge()"></div>
@@ -69,10 +75,10 @@
             </div>
 
             <div class="shift-box" style="border-left-color: var(--etc)">
-                <span class="label-min">CA CHIỀU</span>
+                <span class="label-min">CA CHIỀU (ODO)</span>
                 <div class="grid-2" style="margin-bottom:10px">
-                    <div><label class="label-min">Đầu ca (ODO)</label><input id="pm-os" type="number" oninput="liveCalc()"></div>
-                    <div><label class="label-min">Kết ca (ODO)</label><input id="pm-oe" type="number" oninput="liveCalc()"></div>
+                    <div><label class="label-min">Đầu ca</label><input id="pm-os" type="number" oninput="liveCalc()"></div>
+                    <div><label class="label-min">Kết ca</label><input id="pm-oe" type="number" oninput="liveCalc()"></div>
                 </div>
                 <div class="grid-3">
                     <div><label class="label-min">Tr. Sạc (%)</label><input id="pm-u1" type="number" oninput="liveCalc()"></div>
@@ -82,16 +88,16 @@
             </div>
 
             <div class="grid-2">
-                <div><span class="label-min">Doanh thu Grab:</span><input id="in-inc" type="tel" oninput="formatInp(this); liveCalc()"></div>
-                <div><span class="label-min">Phí ETC (Trừ ví):</span><input id="in-etc" type="tel" oninput="formatInp(this); liveCalc()"></div>
+                <div><span class="label-min">Doanh thu thêm:</span><input id="in-inc" type="tel" oninput="formatInp(this); liveCalc()"></div>
+                <div><span class="label-min">Phí ETC:</span><input id="in-etc" type="tel" oninput="formatInp(this); liveCalc()"></div>
             </div>
 
             <div class="card" style="margin:15px 0 0 0; background:#f0f7ff; box-shadow:none; padding:10px">
-                <div class="row"><span>Tổng Pin đã sạc:</span><b id="res-u">0 %</b></div>
-                <div class="row"><span>Tiền điện dự tính:</span><b id="res-elec" style="color:var(--success)">MIỄN PHÍ</b></div>
-                <div class="row" style="border:none"><b>LỢI NHUẬN RÒNG:</b><b id="res-profit" style="color:var(--primary); font-size:16px">0 đ</b></div>
+                <div class="row"><span>Tiền nút (Grab/Thuê):</span><b id="res-st-val" style="color:var(--etc)">0 đ</b></div>
+                <div class="row"><span>Cày thêm:</span><b id="res-extra-val">0 đ</b></div>
+                <div class="row" style="border:none"><b>TỔNG LỢI NHUẬN:</b><b id="res-profit" style="color:var(--primary); font-size:16px">0 đ</b></div>
             </div>
-            <button class="btn-main" onclick="saveData()">💾 LƯU DỮ LIỆU & CẬP NHẬT VÍ</button>
+            <button class="btn-main" onclick="saveData()">💾 LƯU DỮ LIỆU</button>
         </div>
     </div>
 
@@ -99,51 +105,41 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
                 <button onclick="changeM(-1)" style="padding:10px; border:none; background:#eee; border-radius:8px">◀</button>
-                <b id="calMonthTitle">Tháng ...</b>
+                <b id="calMonthTitle">...</b>
                 <button onclick="changeM(1)" style="padding:10px; border:none; background:#eee; border-radius:8px">▶</button>
             </div>
             <div id="calendarGrid" class="calendar"></div>
         </div>
         <div class="card">
-            <span class="label-min">TỔNG KẾT THÁNG</span>
-            <div class="row"><span>Doanh thu:</span><b id="m-inc">0 đ</b></div>
-            <div class="row"><span>Tiền điện:</span><b id="m-elec">0 đ</b></div>
-            <div class="row"><span>Phí ETC:</span><b id="m-etc">0 đ</b></div>
+            <div class="row"><span>Tổng Tiền Nút:</span><b id="m-st-sum">0 đ</b></div>
+            <div class="row"><span>Tổng Cày Thêm:</span><b id="m-extra-sum">0 đ</b></div>
+            <div class="row"><span>Tổng Phí ETC:</span><b id="m-etc-total" style="color:var(--danger)">0 đ</b></div>
             <div class="row" style="border:none; color:var(--success); font-size:18px; padding-top:10px">
-                <b>THU NHẬP:</b><b id="m-total">0 đ</b>
+                <b>THỰC THU:</b><b id="m-total">0 đ</b>
             </div>
-            <div id="extra-stats"></div>
         </div>
     </div>
 
     <div id="viewUser" class="page" style="display:none">
+        <div class="card" style="background: var(--dark); color: #fff;">
+            <span class="label-min" style="color:#aaa">THÔNG TIN XE</span>
+            <div class="row" style="border-color:#333"><span>Biển số:</span><b>50E-268.18</b></div>
+            <div class="row" style="border-color:#333"><span>ODO Hiện tại:</span><b id="odo-current">0 km</b></div>
+            <div class="row" style="border:none"><span>Bảo dưỡng kế:</span><b id="next-service" style="color:var(--warning)">---</b></div>
+        </div>
+
+        <div class="card">
+            <span class="label-min">HỒ SƠ PHÁP LÝ</span>
+            <div class="legal-row"><span>Đăng kiểm:</span><input type="date" id="exp-dk" onchange="saveLegal()"></div>
+            <div class="legal-row"><span>BH TNDS:</span><input type="date" id="exp-tnds" onchange="saveLegal()"></div>
+            <div class="legal-row"><span>BH Thân vỏ:</span><input type="date" id="exp-tv" onchange="saveLegal()"></div>
+            <div id="legal-alert" style="margin-top:10px"></div>
+        </div>
+
         <div class="card">
             <span class="label-min">VÍ ETC</span>
-            <button class="btn-main" onclick="topupETC()" style="background:var(--etc); margin-bottom:10px">➕ NẠP TIỀN VÀO VÍ</button>
-            <div class="row"><span>Số dư ví hiện tại:</span><b id="user-etc-bal">0 đ</b></div>
-        </div>
-        
-        <div class="card">
-            <span class="label-min">HỆ THỐNG BẢO DƯỠNG (Mỗi 15.000km)</span>
-            <div id="maint-status-card" class="maint-status">
-                <div style="font-size:11px">ODO Hiện tại: <span id="odo-now-display">0</span> km</div>
-                <div style="font-size:18px; margin:5px 0">Còn <span id="maint-km-left">---</span> km</div>
-                <div style="font-size:11px">Mốc bảo dưỡng kế tiếp: <b id="display-maint-next">---</b></div>
-            </div>
-            
-            <button class="btn-main" onclick="completeMaint()" style="background:var(--primary); font-size:12px; padding:12px">✅ XÁC NHẬN VỪA BẢO DƯỠNG XONG</button>
-            
-            <div class="row" style="border:none; font-size:10px; color:#888; margin-top:5px">
-                <span>Nhật ký lần cuối:</span><span id="display-maint-last">Chưa rõ</span>
-            </div>
-
-            <div style="border-top:1px solid #eee; margin-top:15px; padding-top:10px">
-                <span class="label-min">THÔNG TIN XE</span>
-                <div class="row"><span>Biển số:</span><input id="car-plate" onchange="saveInfo()" style="width:120px; border:none; text-align:right"></div>
-                <div class="row"><span>Đăng kiểm:</span><input id="car-reg" type="month" onchange="saveInfo()" style="width:140px"></div>
-                <div class="row"><span>Bảo hiểm:</span><input id="car-ins" type="date" onchange="saveInfo()" style="width:140px"></div>
-                <div class="row"><span>Sửa mốc (Km):</span><input id="car-maint" type="number" onchange="saveInfo()" style="width:100px; border:none; text-align:right"></div>
-            </div>
+            <div class="row"><span>Số dư ví:</span><b id="user-etc-bal" style="color:var(--primary)">0 đ</b></div>
+            <button class="btn-main" onclick="topupETC()" style="background:var(--etc)">➕ NẠP TIỀN</button>
         </div>
         <button class="btn-main" style="background:#888" onclick="auth.signOut()">ĐĂNG XUẤT</button>
     </div>
@@ -154,17 +150,17 @@ const firebaseConfig = { apiKey: "AIzaSyDY2S9ntLM_PsWiTqsWuTtPXZuZhUGJ7nI", auth
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database(), auth = firebase.auth();
 
-const BAT = 37.23, PRICE = 3858;
-const FREE_UNTIL = new Date('2027-06-30T23:59:59'); 
-let cD, cM, cY, curU, fullData = {}, currentEtcBal = 0, latestMaxOdo = 0;
+let cD, cM, cY, curU, fullData = {}, currentEtcBal = 0, currentSt = 'grab';
 
 auth.onAuthStateChanged(user => { 
     if(user) { 
         curU = user; 
         const n = new Date(); 
-        cD = n.getDate(); cM = n.getMonth()+1; cY = n.getFullYear();
+        cD = n.getDate(); cM = n.getMonth()+1; cY = n.getFullYear(); 
         sync(); 
-    } 
+    } else {
+        // Xử lý khi chưa đăng nhập (nếu cần)
+    }
 });
 
 async function sync() {
@@ -172,178 +168,156 @@ async function sync() {
     const val = snap.val() || {};
     fullData = val.data || {};
     currentEtcBal = val.info?.etc_bal || 0;
-
-    // Tìm ODO cao nhất từ dữ liệu lịch sử
-    latestMaxOdo = 0;
-    Object.values(fullData).forEach(y => Object.values(y).forEach(m => Object.values(m).forEach(day => {
-        latestMaxOdo = Math.max(latestMaxOdo, day.am?.oe||0, day.pm?.oe||0);
-    })));
-
-    updateETCUI(currentEtcBal);
-    if(val.info) {
-        document.getElementById('car-plate').value = val.info.plate || '';
-        document.getElementById('car-reg').value = val.info.reg || '';
-        document.getElementById('car-ins').value = val.info.ins || '';
-        document.getElementById('car-maint').value = val.info.maint || 15000;
-        document.getElementById('display-maint-next').innerText = (val.info.maint || 15000).toLocaleString() + " km";
-        document.getElementById('display-maint-last').innerText = val.info.last_maint || "Chưa có";
-        document.getElementById('odo-now-display').innerText = latestMaxOdo.toLocaleString();
-        
-        checkAlerts(val.info, latestMaxOdo);
-        updateMaintUI(val.info.maint || 15000, latestMaxOdo);
-    }
-    fillFormByDate();
+    const legal = val.legal || {};
+    
+    // Fill Legal
+    document.getElementById('exp-dk').value = legal.dk || '';
+    document.getElementById('exp-tnds').value = legal.tnds || '';
+    document.getElementById('exp-tv').value = legal.tv || '';
+    
+    updateUI(val);
 }
 
-function updateMaintUI(target, current) {
-    const left = target - current;
-    const card = document.getElementById('maint-status-card');
-    const txt = document.getElementById('maint-km-left');
-    txt.innerText = left.toLocaleString();
+function updateUI(val) {
+    let maxOdo = 0;
+    Object.values(fullData).forEach(y => Object.values(y).forEach(m => Object.values(m).forEach(d => {
+        maxOdo = Math.max(maxOdo, d.am?.oe||0, d.pm?.oe||0);
+    })));
+
+    document.getElementById('odo-current').innerText = maxOdo.toLocaleString() + " km";
+    document.getElementById('next-service').innerText = (Math.ceil((maxOdo+1)/12000)*12000).toLocaleString() + " km";
+    document.getElementById('etc-balance-main').innerText = currentEtcBal.toLocaleString() + " đ";
+    document.getElementById('user-etc-bal').innerText = currentEtcBal.toLocaleString() + " đ";
     
-    if(left <= 100) { card.style.background = "#fff0f0"; card.style.color = "var(--danger)"; }
-    else if(left <= 500) { card.style.background = "#fff9ee"; card.style.color = "var(--warning)"; }
-    else { card.style.background = "#f2faf4"; card.style.color = "var(--success)"; }
+    fillFormByDate();
+    checkLegal();
+}
+
+function setSt(st) {
+    currentSt = st;
+    document.querySelectorAll('.btn-st').forEach(b => b.classList.remove('st-grab-active','st-rent-active','st-off-active'));
+    document.getElementById('btn-' + st).classList.add('st-' + st + '-active');
+    liveCalc();
 }
 
 function fillFormByDate() {
     const d = (fullData[cY]?.[cM]?.[cD]) || {};
-    let lastOdoEver = 0;
+    let lastOdo = 0;
     Object.keys(fullData).forEach(y => Object.keys(fullData[y]).forEach(m => Object.entries(fullData[y][m]).forEach(([day, data]) => {
-        const dateVer = new Date(y, m-1, day);
-        if(dateVer < new Date(cY, cM-1, cD)) lastOdoEver = Math.max(lastOdoEver, data.am?.oe||0, data.pm?.oe||0);
+        if(new Date(y, m-1, day) < new Date(cY, cM-1, cD)) lastOdo = Math.max(lastOdo, data.pm?.oe||0, data.am?.oe||0);
     })));
 
-    document.getElementById('am-os').value = d.am?.os || (lastOdoEver > 0 ? lastOdoEver : '');
+    setSt(d.st || 'grab');
+    document.getElementById('am-os').value = d.am?.os || (lastOdo > 0 ? lastOdo : '');
     document.getElementById('am-oe').value = d.am?.oe || '';
     document.getElementById('pm-os').value = d.pm?.os || d.am?.oe || '';
     document.getElementById('pm-oe').value = d.pm?.oe || '';
+    
     ['am-u1','am-u2','am-u3','pm-u1','pm-u2','pm-u3'].forEach(id => {
         const [shift, field] = id.split('-');
         document.getElementById(id).value = d[shift]?.[field] || '';
     });
+
     document.getElementById('in-inc').value = (d.inc || 0).toLocaleString();
     document.getElementById('in-etc').value = (d.etc || 0).toLocaleString();
-    document.getElementById('prev-odo-tip').innerText = lastOdoEver.toLocaleString();
-    refreshUI();
-}
-
-function autoBridge() {
-    const amOe = document.getElementById('am-oe').value;
-    document.getElementById('pm-os').value = amOe;
-    liveCalc();
+    document.getElementById('prev-odo-tip').innerText = lastOdo.toLocaleString();
+    refreshPageData();
 }
 
 function liveCalc() {
-    const get = id => parseInt(document.getElementById(id).value || 0);
-    const uCharged = Math.max(0, get('am-u2') - get('am-u1')) + Math.max(0, get('pm-u2') - get('pm-u1'));
-    const isFree = new Date(cY, cM - 1, cD) <= FREE_UNTIL;
-    const elecCost = isFree ? 0 : Math.round(uCharged * BAT / 100 * PRICE);
-    const inc = parseNum(document.getElementById('in-inc').value);
+    let stVal = (currentSt === 'grab') ? 200000 : (currentSt === 'rent' ? 500000 : 0);
+    const extraVal = parseNum(document.getElementById('in-inc').value);
     const etc = parseNum(document.getElementById('in-etc').value);
-
-    document.getElementById('res-u').innerText = uCharged + " %";
-    document.getElementById('res-elec').innerText = isFree ? "MIỄN PHÍ" : elecCost.toLocaleString() + " đ";
-    document.getElementById('res-profit').innerText = (inc - etc - elecCost).toLocaleString() + " đ";
+    document.getElementById('res-st-val').innerText = stVal.toLocaleString() + " đ";
+    document.getElementById('res-extra-val').innerText = extraVal.toLocaleString() + " đ";
+    document.getElementById('res-profit').innerText = (stVal + extraVal - etc).toLocaleString() + " đ";
 }
 
 async function saveData() {
-    const etcIn = parseNum(document.getElementById('in-etc').value);
     const d = {
+        st: currentSt,
         am: { os: getV('am-os'), oe: getV('am-oe'), u1: getV('am-u1'), u2: getV('am-u2'), u3: getV('am-u3') },
         pm: { os: getV('pm-os'), oe: getV('pm-oe'), u1: getV('pm-u1'), u2: getV('pm-u2'), u3: getV('pm-u3') },
-        inc: parseNum(document.getElementById('in-inc').value), etc: etcIn
+        inc: parseNum(document.getElementById('in-inc').value),
+        etc: parseNum(document.getElementById('in-etc').value)
     };
     const oldD = (fullData[cY]?.[cM]?.[cD]) || {};
-    const newBal = currentEtcBal + (oldD.etc || 0) - etcIn;
+    const newBal = currentEtcBal + (oldD.etc || 0) - d.etc;
     await db.ref(`users/${curU.uid}/data/${cY}/${cM}/${cD}`).set(d);
     await db.ref(`users/${curU.uid}/info/etc_bal`).set(newBal);
-    alert("Đã lưu dữ liệu!"); 
-    sync();
+    alert("Đã lưu!"); sync();
 }
 
-async function completeMaint() {
-    if(!confirm(`Xác nhận đã bảo dưỡng xong?\nMốc kế tiếp sẽ là ${latestMaxOdo + 15000} km.`)) return;
-    const next = latestMaxOdo + 15000;
-    const log = `${new Date().toLocaleDateString('vi-VN')} (${latestMaxOdo} km)`;
-    await db.ref(`users/${curU.uid}/info`).update({ maint: next, last_maint: log });
-    sync();
+async function saveLegal() {
+    const lg = {
+        dk: document.getElementById('exp-dk').value,
+        tnds: document.getElementById('exp-tnds').value,
+        tv: document.getElementById('exp-tv').value
+    };
+    await db.ref(`users/${curU.uid}/legal`).set(lg);
+    checkLegal();
+}
+
+function checkLegal() {
+    const alertDiv = document.getElementById('legal-alert');
+    alertDiv.innerHTML = '';
+    const dates = { 'Đăng kiểm': 'exp-dk', 'BH TNDS': 'exp-tnds', 'BH Thân vỏ': 'exp-tv' };
+    for (let [name, id] of Object.entries(dates)) {
+        const val = document.getElementById(id).value;
+        if(val) {
+            const diff = Math.ceil((new Date(val) - new Date()) / (1000*60*60*24));
+            if(diff <= 30) alertDiv.innerHTML += `<div style="color:var(--danger); font-size:11px; margin-bottom:5px">⚠️ ${name} còn ${diff} ngày!</div>`;
+        }
+    }
 }
 
 function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
     const days = new Date(cY, cM, 0).getDate();
     const first = new Date(cY, cM - 1, 1).getDay();
-    let h = '', sI=0, sE=0, sEtc=0, sKm=0, sU=0;
-
+    let h = '', tSt=0, tEx=0, tEtc=0;
     ["CN","T2","T3","T4","T5","T6","T7"].forEach(th => h += `<div style="color:#999; font-size:10px; text-align:center">${th}</div>`);
     for(let i=0; i<first; i++) h += '<div></div>';
-
     for(let i=1; i<=days; i++) {
         const v = (fullData[cY]?.[cM] || {})[i] || {};
-        const uC = Math.max(0, (v.am?.u2||0)-(v.am?.u1||0)) + Math.max(0, (v.pm?.u2||0)-(v.pm?.u1||0));
-        const eC = (new Date(cY, cM - 1, i) <= FREE_UNTIL) ? 0 : Math.round(uC * BAT / 100 * PRICE);
-        const profit = (v.inc||0) - (v.etc||0) - eC;
-        const kmDay = Math.max(0, (v.pm?.oe || v.am?.oe || 0) - (v.am?.os || 0));
-        sI += (v.inc||0); sEtc += (v.etc||0); sE += eC; sKm += kmDay; sU += uC;
-
-        const isToday = (i == new Date().getDate() && cM == (new Date().getMonth()+1) && cY == new Date().getFullYear());
-        h += `<div class="day-box ${isToday?'today':''} ${v.inc>0?'has-data':''}" onclick="goDate(${i})">
-                <b>${i}</b>
-                <div style="color:var(--success); font-weight:bold; font-size:9px">${profit>0 ? (profit/1000).toFixed(0)+'k' : ''}</div>
-                <div style="color:#888; font-size:8px">${kmDay>0 ? kmDay+'km' : ''}</div>
+        let sV = v.st==='grab'?200000:(v.st==='rent'?500000:0);
+        let prof = sV + (v.inc||0) - (v.etc||0);
+        tSt+=sV; tEx+=(v.inc||0); tEtc+=(v.etc||0);
+        const isT = (i == new Date().getDate() && cM == (new Date().getMonth()+1) && cY == new Date().getFullYear());
+        h += `<div class="day-box ${isT?'today':''}" onclick="goDate(${i})">
+                <b style="color:${v.st==='rent'?'var(--rent)':(v.st==='off'?'#ccc':'var(--success)')}">${i}</b>
+                <div style="font-weight:bold">${prof !== 0 ? (prof/1000).toFixed(0)+'k' : ''}</div>
               </div>`;
     }
     grid.innerHTML = h;
-    document.getElementById('m-inc').innerText = sI.toLocaleString() + " đ";
-    document.getElementById('m-etc').innerText = sEtc.toLocaleString() + " đ";
-    document.getElementById('m-elec').innerText = sE.toLocaleString() + " đ";
-    document.getElementById('m-total').innerText = (sI - sEtc - sE).toLocaleString() + " đ";
-    document.getElementById('extra-stats').innerHTML = `<div class="row"><span>Tổng Km chạy:</span><b>${sKm} km</b></div>`;
+    document.getElementById('m-st-sum').innerText = tSt.toLocaleString() + " đ";
+    document.getElementById('m-extra-sum').innerText = tEx.toLocaleString() + " đ";
+    document.getElementById('m-etc-total').innerText = tEtc.toLocaleString() + " đ";
+    document.getElementById('m-total').innerText = (tSt + tEx - tEtc).toLocaleString() + " đ";
 }
 
-function checkAlerts(info, maxOdo) {
-    let msgs = [];
-    if(info.reg) {
-        const diff = Math.ceil((new Date(info.reg + "-28") - new Date())/86400000);
-        if(diff <= 15) msgs.push(`Đăng kiểm còn ${diff} ngày`);
-    }
-    const left = (info.maint || 15000) - maxOdo;
-    if(left <= 500) msgs.push(left <= 0 ? `QUÁ HẠN BẢO DƯỠNG!` : `Sắp bảo dưỡng (còn ${left} km)`);
-    document.getElementById('header-alert').innerHTML = msgs.length ? `<marquee>⚠️ ${msgs.join(' | ')}</marquee>` : '';
-}
-
-function updateETCUI(bal) {
-    const s = bal.toLocaleString() + " đ";
-    document.getElementById('etc-balance-main').innerText = s;
-    document.getElementById('user-etc-bal').innerText = s;
-    document.getElementById('etc-alert-ui').style.display = bal < 50000 ? 'block' : 'none';
-}
-function goDate(d) { cD = d; fillFormByDate(); switchTab('day'); }
-function refreshUI() {
-    document.getElementById('dayLabel').innerText = `Ngày ${cD}/${cM}/${cY}`;
-    document.getElementById('calMonthTitle').innerText = `Tháng ${cM} / ${cY}`;
-    liveCalc();
-    if(document.getElementById('viewMonth').style.display !== 'none') renderCalendar();
-}
 function switchTab(t) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
     document.getElementById('view' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = 'block';
     document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('tab-active');
-    refreshUI();
+    if(t === 'month') renderCalendar();
+}
+
+function goDate(d) { cD = d; fillFormByDate(); switchTab('day'); }
+function refreshPageData() {
+    document.getElementById('dayLabel').innerText = `Ngày ${cD}/${cM}/${cY}`;
+    document.getElementById('calMonthTitle').innerText = `Tháng ${cM} / ${cY}`;
+    liveCalc();
 }
 function changeM(s) { const d = new Date(cY, cM-1+s, 1); cM = d.getMonth()+1; cY = d.getFullYear(); sync(); }
 function parseNum(v) { return parseInt(v.toString().replace(/\D/g,'') || 0); }
 function formatInp(el) { el.value = parseNum(el.value).toLocaleString(); }
 function getV(id) { return parseInt(document.getElementById(id).value || 0); }
+function autoBridge() { document.getElementById('pm-os').value = document.getElementById('am-oe').value; liveCalc(); }
 async function topupETC() {
     const a = parseInt(prompt("Số tiền nạp:", "100000") || 0);
     if(a > 0) { await db.ref(`users/${curU.uid}/info/etc_bal`).set(currentEtcBal + a); sync(); }
-}
-async function saveInfo() {
-    const info = { plate: document.getElementById('car-plate').value, reg: document.getElementById('car-reg').value, ins: document.getElementById('car-ins').value, maint: getV('car-maint'), etc_bal: currentEtcBal };
-    await db.ref(`users/${curU.uid}/info`).update(info); sync();
 }
 </script>
 </body>
