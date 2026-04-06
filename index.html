@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VF5 Pro v42.4</title>
+    <title>VF5 Pro v42.4 - Full</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -15,45 +15,30 @@
         .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-weight: bold; color: #888; border-radius: 8px; font-size: 11px; }
         .tab-active { background: var(--primary); color: #fff !important; }
         .card { background: #fff; margin: 10px; padding: 15px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; }
-        
-        /* DARK CARD ĐẶC BIỆT CHO THÔNG SỐ */
         .card-dark { background: linear-gradient(145deg, #1c1c1e, #2c2c2e); color: #fff; border: 1px solid #333; }
         .label-min { font-size: 9px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; display: block; }
-        
-        /* Ô THÔNG SỐ NỔI BẬT */
-        .stat-box { 
-            text-align: center; padding: 12px 5px; background: #2c2c2e; 
-            border-radius: 12px; border: 1px solid #3a3a3c; 
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); 
-        }
+        .stat-box { text-align: center; padding: 12px 5px; background: #2c2c2e; border-radius: 12px; border: 1px solid #3a3a3c; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
         .stat-val { display: block; font-size: 18px; font-weight: 800; color: #fff; }
         .stat-label { font-size: 9px; color: #aaa; margin-bottom: 4px; display: block; }
-
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
         input { width: 100%; padding: 10px; border: 1px solid #eee; border-radius: 10px; font-weight: bold; font-size: 14px; box-sizing: border-box; text-align: center; }
         .btn-main { width: 100%; padding: 16px; background: var(--success); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2f2f7; font-size: 13px; align-items: center; }
-        
         .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
         .bg-safe { background: #eaffea; color: var(--success); }
         .bg-warn { background: #fff4e5; color: var(--warning); }
         .bg-crit { background: #ffebeb; color: var(--danger); }
-        
         .btn-st { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 11px; background: #eee; }
         .st-grab-active { background: var(--success) !important; color: #fff !important; }
         .st-rent-active { background: var(--rent) !important; color: #fff !important; }
         .st-off-active { background: var(--danger) !important; color: #fff !important; }
-        
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
         .day-box { background: #fff; border-radius: 8px; padding: 8px 2px; text-align: center; border: 1px solid #eee; font-size: 10px; min-height: 55px; }
         .today { border: 2px solid var(--primary) !important; background: #eef7ff !important; }
-
-        /* Animation & Sub-buttons */
         .text-blink { animation: blinker 1.5s linear infinite; font-weight: bold; }
         @keyframes blinker { 50% { opacity: 0.3; } }
         .btn-sub { padding: 5px 10px; background: #3a3a3c; color: #fff; border: 1px solid #555; border-radius: 6px; font-size: 10px; cursor: pointer; }
-        .btn-sub:active { background: #555; }
     </style>
 </head>
 <body>
@@ -133,8 +118,28 @@
             </div>
             <div id="calendarGrid" class="calendar"></div>
         </div>
-        <div class="card">
-            <div class="row" style="border:none"><span>Thực thu tháng này:</span><b id="m-total" style="color:var(--success); font-size:18px">0 đ</b></div>
+
+        <div class="card card-dark">
+            <span class="label-min" style="color:var(--primary)">TỔNG KẾT THÁNG</span>
+            <div class="grid-2" style="margin-top:10px; gap:10px">
+                <div class="stat-box">
+                    <span class="stat-label">TỔNG KM</span>
+                    <span class="stat-val" id="m-km" style="color: var(--warning);">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">HIỆU SUẤT PIN TB</span>
+                    <span class="stat-val" id="m-eff" style="color: var(--success);">0.0</span>
+                </div>
+            </div>
+            <div style="margin-top:12px; padding-top:8px; border-top:1px solid #3a3a3c">
+                <div class="row" style="border:none"><span>Doanh thu gốc:</span><b id="m-revenue">0 đ</b></div>
+                <div class="row" style="border:none"><span>Thu thêm:</span><b id="m-inc">0 đ</b></div>
+                <div class="row" style="border:none"><span>Phí ETC:</span><b id="m-etc" style="color:var(--danger)">0 đ</b></div>
+                <div class="row" style="border:none; margin-top:5px; padding-top:10px; border-top:1px dashed #555">
+                    <span style="font-size:14px">LỢI NHUẬN THUẦN:</span>
+                    <b id="m-total" style="color:var(--success); font-size:18px">0 đ</b>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -222,7 +227,6 @@ function updateCoreUI() {
     document.getElementById('odo-current-main').innerText = odoStr;
     document.getElementById('odo-current-user').innerText = odoStr;
 
-    // Logic Bảo dưỡng
     const nextS = lastServiceOdo + 15000;
     const remain = nextS - maxOdo;
     const sElem = document.getElementById('next-service');
@@ -329,19 +333,34 @@ function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
     const days = new Date(cY, cM, 0).getDate();
     const first = new Date(cY, cM - 1, 1).getDay();
-    let h = '', t=0;
+    let h = '', 
+        tProf=0, tRev=0, tInc=0, tEtc=0, tKm=0, tPin=0;
+
     ["CN","T2","T3","T4","T5","T6","T7"].forEach(th => h += `<div style="color:#999; font-size:10px; text-align:center">${th}</div>`);
     for(let i=0; i<first; i++) h += '<div></div>';
+
     for(let i=1; i<=days; i++) {
         const v = (fullData[cY]?.[cM] || {})[i] || {};
-        let p = (v.st==='grab'?200000:(v.st==='rent'?500000:0)) + (v.inc||0) - (v.etc||0);
-        t += p;
+        let base = (v.st==='grab'?200000:(v.st==='rent'?500000:0));
+        let p = base + (v.inc||0) - (v.etc||0);
+        
+        tRev += base; tInc += (v.inc||0); tEtc += (v.etc||0); tProf += p;
+        tKm += ((v.am?.oe||0)-(v.am?.os||0)) + ((v.pm?.oe||0)-(v.pm?.os||0));
+        tPin += ((v.am?.u2||0)-(v.am?.u3||0)) + ((v.pm?.u2||0)-(v.pm?.u3||0));
+
         const isT = (i == new Date().getDate() && cM == (new Date().getMonth()+1));
-        h += `<div class="day-box ${isT?'today':''}" onclick="goDate(${i})"><b>${i}</b><div style="font-weight:bold">${p>0?(p/1000).toFixed(0)+'k':''}</div></div>`;
+        h += `<div class="day-box ${isT?'today':''}" onclick="goDate(${i})"><b>${i}</b><div style="font-weight:bold; color:var(--primary)">${p!==0?(p/1000).toFixed(0)+'k':''}</div></div>`;
     }
     grid.innerHTML = h;
-    document.getElementById('m-total').innerText = t.toLocaleString() + " đ";
+
+    // Cập nhật bảng tổng kết chi tiết
     document.getElementById('calMonthTitle').innerText = `Tháng ${cM} / ${cY}`;
+    document.getElementById('m-km').innerText = tKm.toLocaleString() + " km";
+    document.getElementById('m-eff').innerText = (tKm > 0 && tPin > 0) ? (tKm/tPin).toFixed(1) : "0.0";
+    document.getElementById('m-revenue').innerText = tRev.toLocaleString() + " đ";
+    document.getElementById('m-inc').innerText = tInc.toLocaleString() + " đ";
+    document.getElementById('m-etc').innerText = tEtc.toLocaleString() + " đ";
+    document.getElementById('m-total').innerText = tProf.toLocaleString() + " đ";
 }
 
 function switchTab(t) {
@@ -353,7 +372,7 @@ function switchTab(t) {
 }
 
 function goDate(d) { cD = d; fillFormByDate(); switchTab('day'); }
-function changeM(s) { const d = new Date(cY, cM-1+s, 1); cM = d.getMonth()+1; cY = d.getFullYear(); sync(); if(document.getElementById('viewMonth').style.display !== 'none') renderCalendar(); }
+function changeM(s) { const d = new Date(cY, cM-1+s, 1); cM = d.getMonth()+1; cY = d.getFullYear(); sync(); if(document.getElementById('viewMonth').style.display !== 'none') setTimeout(renderCalendar, 300); }
 function parseNum(v) { return parseInt(v.toString().replace(/\D/g,'') || 0); }
 function formatInp(el) { el.value = parseNum(el.value).toLocaleString(); }
 function getV(id) { return parseInt(document.getElementById(id).value || 0); }
