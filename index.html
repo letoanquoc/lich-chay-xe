@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VF5 Pro v42.4 - Full</title>
+    <title>VF5 Pro v42.5 - Stable</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -34,7 +34,7 @@
         .st-rent-active { background: var(--rent) !important; color: #fff !important; }
         .st-off-active { background: var(--danger) !important; color: #fff !important; }
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
-        .day-box { background: #fff; border-radius: 8px; padding: 8px 2px; text-align: center; border: 1px solid #eee; font-size: 10px; min-height: 55px; }
+        .day-box { background: #fff; border-radius: 8px; padding: 8px 2px; text-align: center; border: 1px solid #eee; font-size: 10px; min-height: 55px; cursor: pointer; }
         .today { border: 2px solid var(--primary) !important; background: #eef7ff !important; }
         .text-blink { animation: blinker 1.5s linear infinite; font-weight: bold; }
         @keyframes blinker { 50% { opacity: 0.3; } }
@@ -258,10 +258,17 @@ async function confirmService() {
 }
 
 function calcEff() {
-    const d = (fullData[cY]?.[cM]?.[cD]) || {};
-    const km = ((d.am?.oe||0)-(d.am?.os||0)) + ((d.pm?.oe||0)-(d.pm?.os||0));
-    const pin = ((d.am?.u2||0)-(d.am?.u3||0)) + ((d.pm?.u2||0)-(d.pm?.u3||0));
-    const res = (km > 0 && pin > 0) ? (km/pin).toFixed(1) : "0.0";
+    const v = (fullData[cY]?.[cM]?.[cD]) || {};
+    // Sửa logic tính toán hiệu suất pin an toàn
+    const amKm = (v.am?.oe > v.am?.os) ? (v.am.oe - v.am.os) : 0;
+    const pmKm = (v.pm?.oe > v.pm?.os) ? (v.pm.oe - v.pm.os) : 0;
+    const amPin = (v.am?.u2 > v.am?.u3) ? (v.am.u2 - v.am.u3) : 0;
+    const pmPin = (v.pm?.u2 > v.pm?.u3) ? (v.pm.u2 - v.pm.u3) : 0;
+
+    const totalKm = amKm + pmKm;
+    const totalPin = amPin + pmPin;
+    
+    const res = (totalKm > 0 && totalPin > 0) ? (totalKm/totalPin).toFixed(1) : "0.0";
     document.getElementById('bat-eff-main').innerText = res;
     document.getElementById('bat-eff-user').innerText = res;
 }
@@ -331,29 +338,34 @@ async function saveLegal() {
 
 function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
-    const days = new Date(cY, cM, 0).getDate();
-    const first = new Date(cY, cM - 1, 1).getDay();
-    let h = '', 
-        tProf=0, tRev=0, tInc=0, tEtc=0, tKm=0, tPin=0;
+    const daysCount = new Date(cY, cM, 0).getDate();
+    const firstDay = new Date(cY, cM - 1, 1).getDay();
+    let h = '', tProf=0, tRev=0, tInc=0, tEtc=0, tKm=0, tPin=0;
 
     ["CN","T2","T3","T4","T5","T6","T7"].forEach(th => h += `<div style="color:#999; font-size:10px; text-align:center">${th}</div>`);
-    for(let i=0; i<first; i++) h += '<div></div>';
+    for(let i=0; i<firstDay; i++) h += '<div></div>';
 
-    for(let i=1; i<=days; i++) {
+    for(let i=1; i<=daysCount; i++) {
         const v = (fullData[cY]?.[cM] || {})[i] || {};
         let base = (v.st==='grab'?200000:(v.st==='rent'?500000:0));
         let p = base + (v.inc||0) - (v.etc||0);
         
         tRev += base; tInc += (v.inc||0); tEtc += (v.etc||0); tProf += p;
-        tKm += ((v.am?.oe||0)-(v.am?.os||0)) + ((v.pm?.oe||0)-(v.pm?.os||0));
-        tPin += ((v.am?.u2||0)-(v.am?.u3||0)) + ((v.pm?.u2||0)-(v.pm?.u3||0));
 
-        const isT = (i == new Date().getDate() && cM == (new Date().getMonth()+1));
+        // CHỐNG SỐ ÂM TẠI ĐÂY: Chỉ tính nếu ODO kết thúc lớn hơn ODO khởi đầu
+        const amKm = (v.am?.oe > v.am?.os) ? (v.am.oe - v.am.os) : 0;
+        const pmKm = (v.pm?.oe > v.pm?.os) ? (v.pm.oe - v.pm.os) : 0;
+        tKm += (amKm + pmKm);
+
+        const amPin = (v.am?.u2 > v.am?.u3) ? (v.am.u2 - v.am.u3) : 0;
+        const pmPin = (v.pm?.u2 > v.pm?.u3) ? (v.pm.u2 - v.pm.u3) : 0;
+        tPin += (amPin + pmPin);
+
+        const isT = (i == new Date().getDate() && cM == (new Date().getMonth()+1) && cY == new Date().getFullYear());
         h += `<div class="day-box ${isT?'today':''}" onclick="goDate(${i})"><b>${i}</b><div style="font-weight:bold; color:var(--primary)">${p!==0?(p/1000).toFixed(0)+'k':''}</div></div>`;
     }
     grid.innerHTML = h;
 
-    // Cập nhật bảng tổng kết chi tiết
     document.getElementById('calMonthTitle').innerText = `Tháng ${cM} / ${cY}`;
     document.getElementById('m-km').innerText = tKm.toLocaleString() + " km";
     document.getElementById('m-eff').innerText = (tKm > 0 && tPin > 0) ? (tKm/tPin).toFixed(1) : "0.0";
@@ -376,7 +388,11 @@ function changeM(s) { const d = new Date(cY, cM-1+s, 1); cM = d.getMonth()+1; cY
 function parseNum(v) { return parseInt(v.toString().replace(/\D/g,'') || 0); }
 function formatInp(el) { el.value = parseNum(el.value).toLocaleString(); }
 function getV(id) { return parseInt(document.getElementById(id).value || 0); }
-function autoBridge() { document.getElementById('pm-os').value = document.getElementById('am-oe').value; liveCalc(); }
+function autoBridge() { 
+    const amOe = document.getElementById('am-oe').value;
+    if(amOe) document.getElementById('pm-os').value = amOe; 
+    liveCalc(); 
+}
 async function topupETC() { const a = parseInt(prompt("Số tiền nạp:", "100000") || 0); if(a > 0) { await db.ref(`users/${curU.uid}/info/etc_bal`).set(currentEtcBal + a); sync(); } }
 </script>
 </body>
